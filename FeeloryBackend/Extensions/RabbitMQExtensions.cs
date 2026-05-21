@@ -1,0 +1,29 @@
+namespace FeeloryBackend.Extensions;
+
+using FeeloryBackend.Messaging.RabbitMQ;
+using FeeloryBackend.Messaging.RabbitMQ.Consumers;
+using FeeloryBackend.Messaging.RabbitMQ.Publishers;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+
+public static class RabbitMQExtensions
+{
+    public static IServiceCollection AddRabbitMQ(this IServiceCollection services, IConfiguration configuration)
+    {
+        // Bind config
+        services.Configure<RabbitMQSettings>(
+            configuration.GetSection("RabbitMQ"));
+
+        // Core infrastructure
+        services.AddSingleton<IRabbitMQConnectionFactory, RabbitMQConnectionFactory>();
+        services.AddSingleton<IEventBus, RabbitMQEventBus>();
+
+        // Publishers
+        services.AddSingleton<EmailPublisher>();
+
+        // Consumers (Background Services)
+        services.AddHostedService<EmailConsumerService>();
+
+        return services;
+    }
+}
