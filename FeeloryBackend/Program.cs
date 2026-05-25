@@ -1,6 +1,9 @@
+using FeeloryBackend.BackgroundServices;
 using FeeloryBackend.Data;
 using FeeloryBackend.Extensions;
 using FeeloryBackend.Middlewares;
+using FeeloryBackend.Services.Implementations;
+using FeeloryBackend.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);

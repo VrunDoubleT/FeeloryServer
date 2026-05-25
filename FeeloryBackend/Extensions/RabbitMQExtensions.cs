@@ -23,7 +23,8 @@ public static class RabbitMQExtensions
 
         // Consumers (Background Services)
         services.AddHostedService<EmailConsumerService>();
-
+        services.AddScoped<DaySharePublisher>();
+        services.AddHostedService<DayShareFeedConsumerService>();
         return services;
     }
 }

@@ -1,3 +1,4 @@
+using FeeloryBackend.Messaging.RabbitMQ.Publishers;
 using FeeloryBackend.Services.Implementations;
 using FeeloryBackend.Services.Interfaces;
 
@@ -16,7 +17,8 @@ public static class DependencyInjectionExtensions
         services.AddScoped<ICloudinaryService, CloudinaryService>();
         services.AddScoped<IPasswordHasherService, PasswordHasherService>();
         services.AddScoped<IFriendService, FriendService>();
-        
+        services.AddScoped<IDayShareService, DayShareService>();
+        services.AddScoped<DaySharePublisher>();
         return services;
     }
 }
