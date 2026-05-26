@@ -1,112 +1,63 @@
-using System.Text;
-using System.Text.Json;
 using FeeloryBackend.Data;
-using FeeloryBackend.Messaging.RabbitMQ.Constants;
 using FeeloryBackend.Messaging.RabbitMQ.Messages;
-using FeeloryBackend.Messaging.RabbitMQ.Queues;
 using FeeloryBackend.Models.Entities;
 using Microsoft.EntityFrameworkCore;
-using RabbitMQ.Client;
-using RabbitMQ.Client.Events;
 using Task = System.Threading.Tasks.Task;
 
-namespace FeeloryBackend.BackgroundServices;
+namespace FeeloryBackend.Services.Implementations;
 
-public class DayShareFeedService : BackgroundService
+public static class DayShareFeedService
 {
-    private readonly IConfiguration _configuration;
-    private readonly IServiceScopeFactory _scopeFactory;
-
-    public DayShareFeedService(IConfiguration configuration, IServiceScopeFactory scopeFactory)
+    // Dùng chung cho CREATED và ADDED
+    public static async Task HandleAddFeedsAsync(
+        AppDbContext db,
+        DayShareFeedMessage message)
     {
-        _configuration = configuration;
-        _scopeFactory  = scopeFactory;
+        foreach (var viewerId in message.ViewerIds.Distinct())
+        {
+            bool exists = await db.DayShareFeeds.AnyAsync(x =>
+                x.DayShareId == message.DayShareId &&
+                x.ViewerId == viewerId);
+
+            if (exists) continue;
+
+            db.DayShareFeeds.Add(new DayShareFeed
+            {
+                Id         = Guid.NewGuid(),
+                DayShareId = message.DayShareId,
+                ViewerId   = viewerId,
+                PostedAt   = DateTime.UtcNow
+            });
+        }
+
+        await db.SaveChangesAsync();
     }
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    public static async Task HandleRemovedAsync(
+        AppDbContext db,
+        DayShareFeedMessage message)
     {
-        var factory = new ConnectionFactory
-        {
-            HostName = _configuration["RabbitMQ:Host"],
-            Port     = int.Parse(_configuration["RabbitMQ:Port"]!),
-            UserName = _configuration["RabbitMQ:Username"],
-            Password = _configuration["RabbitMQ:Password"]
-        };
+        var toRemove = await db.DayShareFeeds
+            .Where(x =>
+                x.DayShareId == message.DayShareId &&
+                message.ViewerIds.Contains(x.ViewerId))
+            .ToListAsync();
 
-        var connection = await factory.CreateConnectionAsync(stoppingToken);
-        var channel    = await connection.CreateChannelAsync(cancellationToken: stoppingToken);
+        db.DayShareFeeds.RemoveRange(toRemove);
 
-        await channel.ExchangeDeclareAsync(
-            exchange: RabbitMQConstants.MainExchange,
-            type:     ExchangeType.Direct,
-            durable:  true,
-            cancellationToken: stoppingToken);
+        await db.SaveChangesAsync();
+    }
 
-        await channel.QueueDeclareAsync(
-            queue:      QueueNames.DayShareFeed,
-            durable:    true,
-            exclusive:  false,
-            autoDelete: false,
-            cancellationToken: stoppingToken);
+    public static async Task HandleDeletedAsync(
+        AppDbContext db,
+        DayShareFeedMessage message)
+    {
+        var feeds = await db.DayShareFeeds
+            .Where(x => x.DayShareId == message.DayShareId)
+            .ToListAsync();
 
-        await channel.QueueBindAsync(
-            queue:      QueueNames.DayShareFeed,
-            exchange:   RabbitMQConstants.MainExchange,
-            routingKey: QueueNames.DayShareFeed,
-            cancellationToken: stoppingToken);
+        db.DayShareFeeds.RemoveRange(feeds);
 
-        var consumer = new AsyncEventingBasicConsumer(channel);
-
-        consumer.ReceivedAsync += async (_, ea) =>
-        {
-            try
-            {
-                var json    = Encoding.UTF8.GetString(ea.Body.Span);
-                var message = JsonSerializer.Deserialize<DayShareFeedMessage>(json);
-
-                if (message is null || message.Action != "CREATED")
-                {
-                    await channel.BasicAckAsync(ea.DeliveryTag, false, stoppingToken);
-                    return;
-                }
-
-                using var scope = _scopeFactory.CreateScope();
-                var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-
-                foreach (var viewerId in message.ViewerIds.Distinct())
-                {
-                    bool alreadyExists = await db.DayShareFeeds.AnyAsync(
-                        f => f.DayShareId == message.DayShareId && f.ViewerId == viewerId,
-                        stoppingToken);
-
-                    if (alreadyExists)
-                        continue;
-
-                    db.DayShareFeeds.Add(new DayShareFeed
-                    {
-                        Id         = Guid.NewGuid(),
-                        DayShareId = message.DayShareId,
-                        ViewerId   = viewerId,
-                        PostedAt   = DateTime.UtcNow
-                    });
-                }
-
-                await db.SaveChangesAsync(stoppingToken);
-
-                await channel.BasicAckAsync(ea.DeliveryTag, false, stoppingToken);
-            }
-            catch
-            {
-                await channel.BasicNackAsync(ea.DeliveryTag, false, requeue: true, stoppingToken);
-            }
-        };
-
-        await channel.BasicConsumeAsync(
-            queue:     QueueNames.DayShareFeed,
-            autoAck:   false,
-            consumer:  consumer,
-            cancellationToken: stoppingToken);
-
-        await Task.Delay(Timeout.Infinite, stoppingToken);
+        await db.SaveChangesAsync();
     }
 }

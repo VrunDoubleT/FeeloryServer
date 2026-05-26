@@ -22,6 +22,7 @@ public class DaySharesController : ControllerBase
     private Guid CurrentUserId =>
         Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
 
+    // Create
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateDayShareRequestDto dto)
     {
@@ -29,6 +30,59 @@ public class DaySharesController : ControllerBase
 
         return result.IsSuccess
             ? Ok(new ApiResponse<object>(null, "DayShare created successfully"))
+            : BadRequest(new ApiErrorResponse(result.Error!));
+    }
+    
+    //Update
+    [HttpPatch]
+    public async Task<IActionResult> Update([FromBody] UpdateDayShareRequestDto dto)
+    {
+        var result = await _dayShareService
+            .UpdateAsync(CurrentUserId, dto);
+
+        return result.IsSuccess
+            ? Ok(new ApiResponse<object>(
+                null, "DayShare updated successfully"))
+            : BadRequest(new ApiErrorResponse(result.Error!));
+    }
+    
+    //getid
+    [HttpGet("{id:guid}")]
+    public async Task<IActionResult> GetById(Guid id)
+    {
+        var result = await _dayShareService
+            .GetByIdAsync(CurrentUserId, id);
+
+        return result.IsSuccess
+            ? Ok(new ApiResponse<DayShareDetailDto>(
+                result.Data, "Success"))
+            : BadRequest(new ApiErrorResponse(result.Error!));
+    }
+    
+    //dele
+    [HttpDelete("{id:guid}")]
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        var result = await _dayShareService
+            .DeleteAsync(CurrentUserId, id);
+
+        return result.IsSuccess
+            ? Ok(new ApiResponse<object>(
+                null, "DayShare deleted successfully"))
+            : BadRequest(new ApiErrorResponse(result.Error!));
+    }
+    
+    [HttpGet("feed")]
+    public async Task<IActionResult> GetFeed(
+        [FromQuery] int page     = 1,
+        [FromQuery] int pageSize = 10)
+    {
+        var result = await _dayShareService
+            .GetFeedAsync(CurrentUserId, page, pageSize);
+
+        return result.IsSuccess
+            ? Ok(new ApiResponse<DayShareFeedPagedDto>(
+                result.Data, "Success"))
             : BadRequest(new ApiErrorResponse(result.Error!));
     }
 }

@@ -1,219 +1,113 @@
 using System.Text;
 using System.Text.Json;
 using FeeloryBackend.Data;
+using FeeloryBackend.Messaging.RabbitMQ;
 using FeeloryBackend.Messaging.RabbitMQ.Constants;
 using FeeloryBackend.Messaging.RabbitMQ.Messages;
-using FeeloryBackend.Messaging.RabbitMQ.Queues;
-using FeeloryBackend.Messaging.RabbitMQ.Routing;
-using FeeloryBackend.Models.Entities;
-using Microsoft.EntityFrameworkCore;
 using RabbitMQ.Client;
 using RabbitMQ.Client.Events;
-using Task = System.Threading.Tasks.Task;
+using ExchangeType = RabbitMQ.Client.ExchangeType;
 
-namespace FeeloryBackend.Messaging.RabbitMQ.Consumers;
-
-public class DayShareFeedConsumerService : BackgroundService
+public abstract class DayShareFeedConsumerService : BackgroundService
 {
     private readonly IRabbitMQConnectionFactory _factory;
     private readonly IServiceScopeFactory _scopeFactory;
 
-    public DayShareFeedConsumerService(
+    protected DayShareFeedConsumerService(
         IRabbitMQConnectionFactory factory,
         IServiceScopeFactory scopeFactory)
     {
-        _factory = factory;
+        _factory      = factory;
         _scopeFactory = scopeFactory;
     }
+
+    // Mỗi subclass khai báo queue và routing key của riêng nó
+    protected abstract string QueueName  { get; }
+    protected abstract string RoutingKey { get; }
+    protected abstract string Action     { get; }
+
+    protected abstract Task ProcessAsync(
+        AppDbContext db,
+        DayShareFeedMessage message);
 
     protected override async Task ExecuteAsync(
         CancellationToken stoppingToken)
     {
-        var connection =
-            await _factory.CreateConnection();
-
-        var channel =
-            await connection.CreateChannelAsync(
-                cancellationToken: stoppingToken);
-
-        await channel.ExchangeDeclareAsync(
-            exchange: RabbitMQConstants.MainExchange,
-            type: ExchangeType.Topic,
-            durable: true,
-            autoDelete: false,
-            cancellationToken: stoppingToken);
-
-        await channel.QueueDeclareAsync(
-            queue: QueueNames.DayShareFeed,
-            durable: true,
-            exclusive: false,
-            autoDelete: false,
-            cancellationToken: stoppingToken);
-
-        await channel.QueueBindAsync(
-            queue: QueueNames.DayShareFeed,
-            exchange: RabbitMQConstants.MainExchange,
-            routingKey: RoutingKeys.DayShareFeed,
-            cancellationToken: stoppingToken);
-
-        var consumer =
-            new AsyncEventingBasicConsumer(channel);
-
-        consumer.ReceivedAsync += async (sender, args) =>
+        while (!stoppingToken.IsCancellationRequested)
         {
             try
             {
-                var json =
-                    Encoding.UTF8.GetString(
-                        args.Body.ToArray());
+                await using var connection = await _factory.CreateConnection();
 
-                var message =
-                    JsonSerializer.Deserialize<
-                        DayShareFeedMessage>(json);
+                await using var channel = await connection.CreateChannelAsync(
+                    cancellationToken: stoppingToken);
+                await channel.ExchangeDeclareAsync(
+                    exchange:   RabbitMQConstants.MainExchange,
+                    type:       ExchangeType.Topic,
+                    durable:    true,
+                    autoDelete: false,
+                    cancellationToken: stoppingToken);
 
-                if (message is null)
-                    return;
+                // Mỗi consumer dùng queue riêng
+                await channel.QueueDeclareAsync(
+                    queue:      QueueName,
+                    durable:    true,
+                    exclusive:  false,
+                    autoDelete: false,
+                    cancellationToken: stoppingToken);
 
-                using var scope =
-                    _scopeFactory.CreateScope();
+                // Bind đúng routing key của nó
+                await channel.QueueBindAsync(
+                    queue:      QueueName,
+                    exchange:   RabbitMQConstants.MainExchange,
+                    routingKey: RoutingKey,
+                    cancellationToken: stoppingToken);
 
-                var db =
-                    scope.ServiceProvider
-                        .GetRequiredService<AppDbContext>();
+                var consumer = new AsyncEventingBasicConsumer(channel);
 
-                switch (message.Action)
+                consumer.ReceivedAsync += async (_, args) =>
                 {
-                    case "CREATED":
-                        await HandleCreatedAsync(
-                            db,
-                            message);
-                        break;
+                    try
+                    {
+                        var json = Encoding.UTF8.GetString(args.Body.ToArray());
+                        var message = JsonSerializer.Deserialize<DayShareFeedMessage>(json);
 
-                    case "UPDATED":
-                        await HandleUpdatedAsync(
-                            db,
-                            message);
-                        break;
+                        if (message is null)
+                        {
+                            await channel.BasicAckAsync(args.DeliveryTag, false, stoppingToken);
+                            return;
+                        }
 
-                    case "DELETED":
-                        await HandleDeletedAsync(
-                            db,
-                            message);
-                        break;
-                }
+                        using var scope = _scopeFactory.CreateScope();
+                        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-                await channel.BasicAckAsync(
-                    args.DeliveryTag,
-                    false,
-                    stoppingToken);
+                        await ProcessAsync(db, message);
+
+                        await channel.BasicAckAsync(args.DeliveryTag, false, stoppingToken);
+                    }
+                    catch
+                    {
+                        await channel.BasicNackAsync(args.DeliveryTag, false, true, stoppingToken);
+                    }
+                };
+
+                await channel.BasicConsumeAsync(
+                    queue:    QueueName,
+                    autoAck:  false,
+                    consumer: consumer,
+                    cancellationToken: stoppingToken);
+
+                await Task.Delay(Timeout.Infinite, stoppingToken);
             }
-            catch
+            catch (OperationCanceledException)
             {
-                await channel.BasicNackAsync(
-                    args.DeliveryTag,
-                    false,
-                    true,
-                    stoppingToken);
+                break;
             }
-        };
-
-        await channel.BasicConsumeAsync(
-            queue: QueueNames.DayShareFeed,
-            autoAck: false,
-            consumer: consumer,
-            cancellationToken: stoppingToken);
-
-        await Task.Delay(
-            Timeout.Infinite,
-            stoppingToken);
-    }
-
-    private static async Task HandleCreatedAsync(
-        AppDbContext db,
-        DayShareFeedMessage message)
-    {
-        foreach (var viewerId in message.ViewerIds)
-        {
-            bool exists =
-                await db.DayShareFeeds.AnyAsync(x =>
-                    x.DayShareId == message.DayShareId
-                    &&
-                    x.ViewerId == viewerId);
-
-            if (exists)
-                continue;
-
-            db.DayShareFeeds.Add(
-                new DayShareFeed
-                {
-                    Id = Guid.NewGuid(),
-                    DayShareId = message.DayShareId,
-                    ViewerId = viewerId,
-                    PostedAt = DateTime.UtcNow
-                });
+            catch (Exception ex)
+            {
+                Console.WriteLine($"[{GetType().Name}] Lost connection: {ex.Message}. Retrying in 5s...");
+                await Task.Delay(TimeSpan.FromSeconds(5), stoppingToken);
+            }
         }
-
-        await db.SaveChangesAsync();
-    }
-
-    private static async Task HandleUpdatedAsync(
-        AppDbContext db,
-        DayShareFeedMessage message)
-    {
-        var oldFeeds =
-            await db.DayShareFeeds
-                .Where(x =>
-                    x.DayShareId ==
-                    message.DayShareId)
-                .ToListAsync();
-
-        var oldViewerIds =
-            oldFeeds
-                .Select(x => x.ViewerId)
-                .ToHashSet();
-
-        var newViewerIds =
-            message.ViewerIds.ToHashSet();
-
-        var removedViewerIds =
-            oldViewerIds.Except(newViewerIds);
-
-        var addedViewerIds =
-            newViewerIds.Except(oldViewerIds);
-
-        db.DayShareFeeds.RemoveRange(
-            oldFeeds.Where(x =>
-                removedViewerIds.Contains(
-                    x.ViewerId)));
-
-        foreach (var viewerId in addedViewerIds)
-        {
-            db.DayShareFeeds.Add(
-                new DayShareFeed
-                {
-                    Id = Guid.NewGuid(),
-                    DayShareId = message.DayShareId,
-                    ViewerId = viewerId,
-                    PostedAt = DateTime.UtcNow
-                });
-        }
-
-        await db.SaveChangesAsync();
-    }
-
-    private static async Task HandleDeletedAsync(
-        AppDbContext db,
-        DayShareFeedMessage message)
-    {
-        var feeds =
-            await db.DayShareFeeds
-                .Where(x =>
-                    x.DayShareId ==
-                    message.DayShareId)
-                .ToListAsync();
-
-        db.DayShareFeeds.RemoveRange(feeds);
-
-        await db.SaveChangesAsync();
     }
 }

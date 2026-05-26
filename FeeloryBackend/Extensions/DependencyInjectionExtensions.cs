@@ -18,7 +18,7 @@ public static class DependencyInjectionExtensions
         services.AddScoped<IPasswordHasherService, PasswordHasherService>();
         services.AddScoped<IFriendService, FriendService>();
         services.AddScoped<IDayShareService, DayShareService>();
-        services.AddScoped<DaySharePublisher>();
+       
         return services;
     }
 }

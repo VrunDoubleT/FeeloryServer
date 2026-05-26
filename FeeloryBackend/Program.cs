@@ -1,6 +1,7 @@
-using FeeloryBackend.BackgroundServices;
+//using FeeloryBackend.BackgroundServices;
 using FeeloryBackend.Data;
 using FeeloryBackend.Extensions;
+using FeeloryBackend.Messaging.RabbitMQ.Consumers;
 using FeeloryBackend.Middlewares;
 using FeeloryBackend.Services.Implementations;
 using FeeloryBackend.Services.Interfaces;
@@ -56,6 +57,7 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.Migrate();
 }
+
 
 // Global exception middleware
 app.UseGlobalException();

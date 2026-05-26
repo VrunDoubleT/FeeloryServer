@@ -9,12 +9,15 @@ public interface IDayShareService
     // Create full day diary share
     Task<Result> CreateAsync(Guid currentUserId, CreateDayShareRequestDto dto);
     
+    // Update shareday
+    Task<Result> UpdateAsync(Guid currentUserId, UpdateDayShareRequestDto dto);
+    
     // Get shared day detail
-   // Task<DayShareDto> GetByIdAsync(Guid id);
-    
+    Task<Result<DayShareDetailDto>> GetByIdAsync(Guid currentUserId, Guid dayShareId);
+
     // Delete shared day
-   // Task DeleteAsync(Guid userId, Guid id);
-    
-    // Get timeline of shared day
-    //Task<List<PostDto>> GetTimelineAsync(Guid dayShareId);
+    Task<Result> DeleteAsync(Guid currentUserId, Guid dayShareId);
+
+    // Get feed
+    Task<Result<DayShareFeedPagedDto>> GetFeedAsync( Guid currentUserId, int page, int pageSize);
 }

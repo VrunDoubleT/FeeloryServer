@@ -6,7 +6,7 @@ public class DayShare
 {
     public Guid Id { get; set; }
     public Guid OwnerId { get; set; }
-    public string Description { get; set; }
+    public string? Description { get; set; }
     public DateTime SharedDate { get; set; }
     public string ShareType { get; set; } = DayShareTypeConstants.Friends;
     public DateTime? UpdatedAt { get; set; }

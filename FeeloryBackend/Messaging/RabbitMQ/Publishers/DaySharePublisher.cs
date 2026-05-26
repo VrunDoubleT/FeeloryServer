@@ -7,17 +7,23 @@ public class DaySharePublisher
 {
     private readonly IEventBus _eventBus;
 
-    public DaySharePublisher(
-        IEventBus eventBus)
+    public DaySharePublisher(IEventBus eventBus)
     {
         _eventBus = eventBus;
     }
 
-    public async Task PublishAsync(
-        DayShareFeedMessage message)
+    public async Task PublishAsync(DayShareFeedMessage message)
     {
-        await _eventBus.PublishAsync(
-            RoutingKeys.DayShareFeed,
-            message);
+        // Chọn đúng routing key theo action
+        var routingKey = message.Action switch
+        {
+            DayShareFeedMessage.ActionCreated => RoutingKeys.DayShareCreated,
+            DayShareFeedMessage.ActionAdded   => RoutingKeys.DayShareAdded,
+            DayShareFeedMessage.ActionRemoved => RoutingKeys.DayShareRemoved,
+            DayShareFeedMessage.ActionDeleted => RoutingKeys.DayShareDeleted,
+            _ => throw new ArgumentException($"Unknown action: {message.Action}")
+        };
+
+        await _eventBus.PublishAsync(routingKey, message);
     }
 }
