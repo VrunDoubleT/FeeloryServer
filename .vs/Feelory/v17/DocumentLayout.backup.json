@@ -1,0 +1,296 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "C:\\SUM26\\PRN_Project\\FeelorySever\\FeeloryServer\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{C0C603D3-61D9-4BBC-A2C0-4E98DBE87487}|FeeloryBackend\\FeeloryBackend.csproj|c:\\sum26\\prn_project\\feelorysever\\feeloryserver\\feelorybackend\\controllers\\userscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C0C603D3-61D9-4BBC-A2C0-4E98DBE87487}|FeeloryBackend\\FeeloryBackend.csproj|solutionrelative:feelorybackend\\controllers\\userscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C0C603D3-61D9-4BBC-A2C0-4E98DBE87487}|FeeloryBackend\\FeeloryBackend.csproj|c:\\sum26\\prn_project\\feelorysever\\feeloryserver\\feelorybackend\\controllers\\friendscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C0C603D3-61D9-4BBC-A2C0-4E98DBE87487}|FeeloryBackend\\FeeloryBackend.csproj|solutionrelative:feelorybackend\\controllers\\friendscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C0C603D3-61D9-4BBC-A2C0-4E98DBE87487}|FeeloryBackend\\FeeloryBackend.csproj|c:\\sum26\\prn_project\\feelorysever\\feeloryserver\\feelorybackend\\services\\implementations\\userservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C0C603D3-61D9-4BBC-A2C0-4E98DBE87487}|FeeloryBackend\\FeeloryBackend.csproj|solutionrelative:feelorybackend\\services\\implementations\\userservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C0C603D3-61D9-4BBC-A2C0-4E98DBE87487}|FeeloryBackend\\FeeloryBackend.csproj|c:\\sum26\\prn_project\\feelorysever\\feeloryserver\\feelorybackend\\responses\\paginationresponse.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C0C603D3-61D9-4BBC-A2C0-4E98DBE87487}|FeeloryBackend\\FeeloryBackend.csproj|solutionrelative:feelorybackend\\responses\\paginationresponse.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C0C603D3-61D9-4BBC-A2C0-4E98DBE87487}|FeeloryBackend\\FeeloryBackend.csproj|c:\\sum26\\prn_project\\feelorysever\\feeloryserver\\feelorybackend\\responses\\cursorpaginationresponse.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C0C603D3-61D9-4BBC-A2C0-4E98DBE87487}|FeeloryBackend\\FeeloryBackend.csproj|solutionrelative:feelorybackend\\responses\\cursorpaginationresponse.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C0C603D3-61D9-4BBC-A2C0-4E98DBE87487}|FeeloryBackend\\FeeloryBackend.csproj|c:\\sum26\\prn_project\\feelorysever\\feeloryserver\\feelorybackend\\models\\dtos\\commons\\cursorpaginationrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C0C603D3-61D9-4BBC-A2C0-4E98DBE87487}|FeeloryBackend\\FeeloryBackend.csproj|solutionrelative:feelorybackend\\models\\dtos\\commons\\cursorpaginationrequest.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C0C603D3-61D9-4BBC-A2C0-4E98DBE87487}|FeeloryBackend\\FeeloryBackend.csproj|c:\\sum26\\prn_project\\feelorysever\\feeloryserver\\feelorybackend\\services\\implementations\\friendservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C0C603D3-61D9-4BBC-A2C0-4E98DBE87487}|FeeloryBackend\\FeeloryBackend.csproj|solutionrelative:feelorybackend\\services\\implementations\\friendservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C0C603D3-61D9-4BBC-A2C0-4E98DBE87487}|FeeloryBackend\\FeeloryBackend.csproj|c:\\sum26\\prn_project\\feelorysever\\feeloryserver\\feelorybackend\\models\\dtos\\friend\\frienddto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C0C603D3-61D9-4BBC-A2C0-4E98DBE87487}|FeeloryBackend\\FeeloryBackend.csproj|solutionrelative:feelorybackend\\models\\dtos\\friend\\frienddto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C0C603D3-61D9-4BBC-A2C0-4E98DBE87487}|FeeloryBackend\\FeeloryBackend.csproj|c:\\sum26\\prn_project\\feelorysever\\feeloryserver\\feelorybackend\\responses\\apiresponse.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C0C603D3-61D9-4BBC-A2C0-4E98DBE87487}|FeeloryBackend\\FeeloryBackend.csproj|solutionrelative:feelorybackend\\responses\\apiresponse.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C0C603D3-61D9-4BBC-A2C0-4E98DBE87487}|FeeloryBackend\\FeeloryBackend.csproj|c:\\sum26\\prn_project\\feelorysever\\feeloryserver\\feelorybackend\\responses\\apierrorresponse.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C0C603D3-61D9-4BBC-A2C0-4E98DBE87487}|FeeloryBackend\\FeeloryBackend.csproj|solutionrelative:feelorybackend\\responses\\apierrorresponse.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C0C603D3-61D9-4BBC-A2C0-4E98DBE87487}|FeeloryBackend\\FeeloryBackend.csproj|c:\\sum26\\prn_project\\feelorysever\\feeloryserver\\feelorybackend\\services\\interfaces\\iuserservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C0C603D3-61D9-4BBC-A2C0-4E98DBE87487}|FeeloryBackend\\FeeloryBackend.csproj|solutionrelative:feelorybackend\\services\\interfaces\\iuserservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C0C603D3-61D9-4BBC-A2C0-4E98DBE87487}|FeeloryBackend\\FeeloryBackend.csproj|c:\\sum26\\prn_project\\feelorysever\\feeloryserver\\feelorybackend\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C0C603D3-61D9-4BBC-A2C0-4E98DBE87487}|FeeloryBackend\\FeeloryBackend.csproj|solutionrelative:feelorybackend\\controllers\\authcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C0C603D3-61D9-4BBC-A2C0-4E98DBE87487}|FeeloryBackend\\FeeloryBackend.csproj|c:\\sum26\\prn_project\\feelorysever\\feeloryserver\\feelorybackend\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C0C603D3-61D9-4BBC-A2C0-4E98DBE87487}|FeeloryBackend\\FeeloryBackend.csproj|solutionrelative:feelorybackend\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C0C603D3-61D9-4BBC-A2C0-4E98DBE87487}|FeeloryBackend\\FeeloryBackend.csproj|c:\\sum26\\prn_project\\feelorysever\\feeloryserver\\feelorybackend\\models\\dtos\\user\\updateuserrequestdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C0C603D3-61D9-4BBC-A2C0-4E98DBE87487}|FeeloryBackend\\FeeloryBackend.csproj|solutionrelative:feelorybackend\\models\\dtos\\user\\updateuserrequestdto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{C0C603D3-61D9-4BBC-A2C0-4E98DBE87487}|FeeloryBackend\\FeeloryBackend.csproj|c:\\sum26\\prn_project\\feelorysever\\feeloryserver\\feelorybackend\\models\\dtos\\user\\userprofiledto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{C0C603D3-61D9-4BBC-A2C0-4E98DBE87487}|FeeloryBackend\\FeeloryBackend.csproj|solutionrelative:feelorybackend\\models\\dtos\\user\\userprofiledto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{82B0CB44-1A03-449F-A625-B10C2A62CF6E}|Solution Items{82B0CB44-1A03-449F-A625-B10C2A62CF6E}|C:\\SUM26\\PRN_Project\\FeelorySever\\FeeloryServer\\.env||{8B382828-6202-11D1-8870-0000F87579D2}",
+      "RelativeMoniker": "D:0:0:{82B0CB44-1A03-449F-A625-B10C2A62CF6E}|Solution Items{82B0CB44-1A03-449F-A625-B10C2A62CF6E}|solutionrelative:.env||{8B382828-6202-11D1-8870-0000F87579D2}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 6,
+          "Children": [
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "FriendService.cs",
+              "DocumentMoniker": "C:\\SUM26\\PRN_Project\\FeelorySever\\FeeloryServer\\FeeloryBackend\\Services\\Implementations\\FriendService.cs",
+              "RelativeDocumentMoniker": "FeeloryBackend\\Services\\Implementations\\FriendService.cs",
+              "ToolTip": "C:\\SUM26\\PRN_Project\\FeelorySever\\FeeloryServer\\FeeloryBackend\\Services\\Implementations\\FriendService.cs",
+              "RelativeToolTip": "FeeloryBackend\\Services\\Implementations\\FriendService.cs",
+              "ViewState": "AgIAAPMAAAAAAAAAAAAIwA0BAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-25T17:37:35.991Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "CursorPaginationRequest.cs",
+              "DocumentMoniker": "C:\\SUM26\\PRN_Project\\FeelorySever\\FeeloryServer\\FeeloryBackend\\Models\\DTOs\\Commons\\CursorPaginationRequest.cs",
+              "RelativeDocumentMoniker": "FeeloryBackend\\Models\\DTOs\\Commons\\CursorPaginationRequest.cs",
+              "ToolTip": "C:\\SUM26\\PRN_Project\\FeelorySever\\FeeloryServer\\FeeloryBackend\\Models\\DTOs\\Commons\\CursorPaginationRequest.cs",
+              "RelativeToolTip": "FeeloryBackend\\Models\\DTOs\\Commons\\CursorPaginationRequest.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-25T17:37:10.148Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "PaginationResponse.cs",
+              "DocumentMoniker": "C:\\SUM26\\PRN_Project\\FeelorySever\\FeeloryServer\\FeeloryBackend\\Responses\\PaginationResponse.cs",
+              "RelativeDocumentMoniker": "FeeloryBackend\\Responses\\PaginationResponse.cs",
+              "ToolTip": "C:\\SUM26\\PRN_Project\\FeelorySever\\FeeloryServer\\FeeloryBackend\\Responses\\PaginationResponse.cs",
+              "RelativeToolTip": "FeeloryBackend\\Responses\\PaginationResponse.cs",
+              "ViewState": "AgIAAA4AAAAAAAAAAAAswCYAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-25T17:36:33.979Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "UserService.cs",
+              "DocumentMoniker": "C:\\SUM26\\PRN_Project\\FeelorySever\\FeeloryServer\\FeeloryBackend\\Services\\Implementations\\UserService.cs",
+              "RelativeDocumentMoniker": "FeeloryBackend\\Services\\Implementations\\UserService.cs",
+              "ToolTip": "C:\\SUM26\\PRN_Project\\FeelorySever\\FeeloryServer\\FeeloryBackend\\Services\\Implementations\\UserService.cs",
+              "RelativeToolTip": "FeeloryBackend\\Services\\Implementations\\UserService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAYAAAAmAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-25T17:14:54.185Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "CursorPaginationResponse.cs",
+              "DocumentMoniker": "C:\\SUM26\\PRN_Project\\FeelorySever\\FeeloryServer\\FeeloryBackend\\Responses\\CursorPaginationResponse.cs",
+              "RelativeDocumentMoniker": "FeeloryBackend\\Responses\\CursorPaginationResponse.cs",
+              "ToolTip": "C:\\SUM26\\PRN_Project\\FeelorySever\\FeeloryServer\\FeeloryBackend\\Responses\\CursorPaginationResponse.cs",
+              "RelativeToolTip": "FeeloryBackend\\Responses\\CursorPaginationResponse.cs",
+              "ViewState": "AgIAAAcAAAAAAAAAAAAowB4AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-25T17:26:54.11Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "FriendsController.cs",
+              "DocumentMoniker": "C:\\SUM26\\PRN_Project\\FeelorySever\\FeeloryServer\\FeeloryBackend\\Controllers\\FriendsController.cs",
+              "RelativeDocumentMoniker": "FeeloryBackend\\Controllers\\FriendsController.cs",
+              "ToolTip": "C:\\SUM26\\PRN_Project\\FeelorySever\\FeeloryServer\\FeeloryBackend\\Controllers\\FriendsController.cs",
+              "RelativeToolTip": "FeeloryBackend\\Controllers\\FriendsController.cs",
+              "ViewState": "AgIAAEkAAAAAAAAAAADwv2gAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-25T16:04:41.821Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "UsersController.cs",
+              "DocumentMoniker": "C:\\SUM26\\PRN_Project\\FeelorySever\\FeeloryServer\\FeeloryBackend\\Controllers\\UsersController.cs",
+              "RelativeDocumentMoniker": "FeeloryBackend\\Controllers\\UsersController.cs",
+              "ToolTip": "C:\\SUM26\\PRN_Project\\FeelorySever\\FeeloryServer\\FeeloryBackend\\Controllers\\UsersController.cs",
+              "RelativeToolTip": "FeeloryBackend\\Controllers\\UsersController.cs",
+              "ViewState": "AgIAACAAAAAAAAAAAAAgwDUAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-25T17:20:28.68Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "FriendDto.cs",
+              "DocumentMoniker": "C:\\SUM26\\PRN_Project\\FeelorySever\\FeeloryServer\\FeeloryBackend\\Models\\DTOs\\Friend\\FriendDto.cs",
+              "RelativeDocumentMoniker": "FeeloryBackend\\Models\\DTOs\\Friend\\FriendDto.cs",
+              "ToolTip": "C:\\SUM26\\PRN_Project\\FeelorySever\\FeeloryServer\\FeeloryBackend\\Models\\DTOs\\Friend\\FriendDto.cs",
+              "RelativeToolTip": "FeeloryBackend\\Models\\DTOs\\Friend\\FriendDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-25T17:37:27.544Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "ApiResponse.cs",
+              "DocumentMoniker": "C:\\SUM26\\PRN_Project\\FeelorySever\\FeeloryServer\\FeeloryBackend\\Responses\\ApiResponse.cs",
+              "RelativeDocumentMoniker": "FeeloryBackend\\Responses\\ApiResponse.cs",
+              "ToolTip": "C:\\SUM26\\PRN_Project\\FeelorySever\\FeeloryServer\\FeeloryBackend\\Responses\\ApiResponse.cs",
+              "RelativeToolTip": "FeeloryBackend\\Responses\\ApiResponse.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-25T17:36:26.741Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "ApiErrorResponse.cs",
+              "DocumentMoniker": "C:\\SUM26\\PRN_Project\\FeelorySever\\FeeloryServer\\FeeloryBackend\\Responses\\ApiErrorResponse.cs",
+              "RelativeDocumentMoniker": "FeeloryBackend\\Responses\\ApiErrorResponse.cs",
+              "ToolTip": "C:\\SUM26\\PRN_Project\\FeelorySever\\FeeloryServer\\FeeloryBackend\\Responses\\ApiErrorResponse.cs",
+              "RelativeToolTip": "FeeloryBackend\\Responses\\ApiErrorResponse.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-25T17:36:25.806Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "IUserService.cs",
+              "DocumentMoniker": "C:\\SUM26\\PRN_Project\\FeelorySever\\FeeloryServer\\FeeloryBackend\\Services\\Interfaces\\IUserService.cs",
+              "RelativeDocumentMoniker": "FeeloryBackend\\Services\\Interfaces\\IUserService.cs",
+              "ToolTip": "C:\\SUM26\\PRN_Project\\FeelorySever\\FeeloryServer\\FeeloryBackend\\Services\\Interfaces\\IUserService.cs",
+              "RelativeToolTip": "FeeloryBackend\\Services\\Interfaces\\IUserService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-25T17:10:16.53Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "Program.cs",
+              "DocumentMoniker": "C:\\SUM26\\PRN_Project\\FeelorySever\\FeeloryServer\\FeeloryBackend\\Program.cs",
+              "RelativeDocumentMoniker": "FeeloryBackend\\Program.cs",
+              "ToolTip": "C:\\SUM26\\PRN_Project\\FeelorySever\\FeeloryServer\\FeeloryBackend\\Program.cs",
+              "RelativeToolTip": "FeeloryBackend\\Program.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABcAAAA0AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-25T03:50:02.081Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "AuthController.cs",
+              "DocumentMoniker": "C:\\SUM26\\PRN_Project\\FeelorySever\\FeeloryServer\\FeeloryBackend\\Controllers\\AuthController.cs",
+              "RelativeDocumentMoniker": "FeeloryBackend\\Controllers\\AuthController.cs",
+              "ToolTip": "C:\\SUM26\\PRN_Project\\FeelorySever\\FeeloryServer\\FeeloryBackend\\Controllers\\AuthController.cs",
+              "RelativeToolTip": "FeeloryBackend\\Controllers\\AuthController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABQAAAA5AAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-25T16:04:36.115Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "UpdateUserRequestDto.cs",
+              "DocumentMoniker": "C:\\SUM26\\PRN_Project\\FeelorySever\\FeeloryServer\\FeeloryBackend\\Models\\DTOs\\User\\UpdateUserRequestDto.cs",
+              "RelativeDocumentMoniker": "FeeloryBackend\\Models\\DTOs\\User\\UpdateUserRequestDto.cs",
+              "ToolTip": "C:\\SUM26\\PRN_Project\\FeelorySever\\FeeloryServer\\FeeloryBackend\\Models\\DTOs\\User\\UpdateUserRequestDto.cs",
+              "RelativeToolTip": "FeeloryBackend\\Models\\DTOs\\User\\UpdateUserRequestDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAcAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-25T17:09:53.404Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "UserProfileDto.cs",
+              "DocumentMoniker": "C:\\SUM26\\PRN_Project\\FeelorySever\\FeeloryServer\\FeeloryBackend\\Models\\DTOs\\User\\UserProfileDto.cs",
+              "RelativeDocumentMoniker": "FeeloryBackend\\Models\\DTOs\\User\\UserProfileDto.cs",
+              "ToolTip": "C:\\SUM26\\PRN_Project\\FeelorySever\\FeeloryServer\\FeeloryBackend\\Models\\DTOs\\User\\UserProfileDto.cs",
+              "RelativeToolTip": "FeeloryBackend\\Models\\DTOs\\User\\UserProfileDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAsAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-05-25T17:05:42.829Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{cce594b6-0c39-4442-ba28-10c64ac7e89f}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": ".env",
+              "DocumentMoniker": "C:\\SUM26\\PRN_Project\\FeelorySever\\FeeloryServer\\.env",
+              "RelativeDocumentMoniker": ".env",
+              "ToolTip": "C:\\SUM26\\PRN_Project\\FeelorySever\\FeeloryServer\\.env",
+              "RelativeToolTip": ".env",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAMAAAAgAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001001|",
+              "WhenOpened": "2026-05-25T03:24:08.765Z",
+              "EditorCaption": ""
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

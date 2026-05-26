@@ -1,12 +1,16 @@
 using FeeloryBackend.Data;
 using FeeloryBackend.Extensions;
 using FeeloryBackend.Middlewares;
+using FeeloryBackend.Services.Implementations;
+using FeeloryBackend.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddEndpointsApiExplorer();
+
+builder.Services.AddScoped<IUserService, UserService>(); //Users
 // builder.Services.AddSwaggerGen();
 
 // Add Database connection
