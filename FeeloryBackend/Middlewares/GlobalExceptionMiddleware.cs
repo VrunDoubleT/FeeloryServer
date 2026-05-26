@@ -9,7 +9,7 @@ using FeeloryBackend.Responses;
 public class GlobalExceptionMiddleware
 {
     private readonly RequestDelegate _next;
-
+    
     public GlobalExceptionMiddleware(
         RequestDelegate next,
         ILogger<GlobalExceptionMiddleware> logger)

@@ -33,7 +33,6 @@
     <ItemGroup>
       <Folder Include="Data\Migrations\" />
       <Folder Include="Filters\" />
-      <Folder Include="Utils\" />
     </ItemGroup>
 
 </Project>

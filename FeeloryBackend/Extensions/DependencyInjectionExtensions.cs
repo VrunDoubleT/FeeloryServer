@@ -1,5 +1,6 @@
 using FeeloryBackend.Services.Implementations;
 using FeeloryBackend.Services.Interfaces;
+using FeeloryBackend.Utils;
 
 namespace FeeloryBackend.Extensions;
 
@@ -16,7 +17,9 @@ public static class DependencyInjectionExtensions
         services.AddScoped<ICloudinaryService, CloudinaryService>();
         services.AddScoped<IPasswordHasherService, PasswordHasherService>();
         services.AddScoped<IFriendService, FriendService>();
-        
+        services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<ICurrentUserService, CurrentUserService>();
+        services.AddScoped<GenerateUniqueUserName>();
         return services;
     }
 }
