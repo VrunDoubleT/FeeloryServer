@@ -138,8 +138,8 @@ public class AuthService : IAuthService
     public async Task<Result<AuthResponseDto>> LoginAsync(LoginRequestDto request)
     {
         var user = await _dbContext.Users
-            .FirstOrDefaultAsync(r => r.Email == request.UsernameOrEmail
-                                   || r.Username == request.UsernameOrEmail);
+            .FirstOrDefaultAsync(r => r.Email == request.Email
+                                   || r.Username == request.Email);
         if (user == null)
             return Result<AuthResponseDto>.Fail("User not found");
 
@@ -158,7 +158,6 @@ public class AuthService : IAuthService
         {
             AccessToken = accessToken,
             RefreshToken = refreshTokenData.RefreshToken,
-            RefreshTokenExpiredAt = refreshTokenData.ExpiredAt
         });
     }
 
@@ -184,7 +183,6 @@ public class AuthService : IAuthService
         {
             AccessToken = newAccessToken,
             RefreshToken = rotated.RefreshToken,
-            RefreshTokenExpiredAt = rotated.ExpiredAt
         });
     }
 

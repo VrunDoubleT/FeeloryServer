@@ -51,7 +51,6 @@ public class AuthController : ControllerBase
             HttpOnly = true,
             Secure = false,          
             SameSite = SameSiteMode.Lax,
-            Expires = result.Data.RefreshTokenExpiredAt
         });
 
         return Ok(new ApiResponse<object>(
@@ -59,7 +58,6 @@ public class AuthController : ControllerBase
             {
                 accessToken = result.Data.AccessToken,
                 refreshToken = result.Data.RefreshToken,      
-                refreshTokenExpiredAt = result.Data.RefreshTokenExpiredAt
             },
             "Login successful"
         ));
@@ -84,7 +82,6 @@ public class AuthController : ControllerBase
             HttpOnly = true,
             Secure = false,        
             SameSite = SameSiteMode.Lax,
-            Expires = result.Data.RefreshTokenExpiredAt
         });
 
         return Ok(new ApiResponse<object>(

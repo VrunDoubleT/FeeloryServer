@@ -103,12 +103,6 @@ public class RefreshTokenService : IRefreshTokenService
         if (oldData == null)
             return null;
 
-        if (oldData.ExpiredAt < DateTime.UtcNow)
-        {
-            await RemoveRefreshTokenAsync(oldRefreshToken);
-            return null;
-        }
-
         var currentVersion = await GetCurrentTokenVersionAsync(oldData.UserId);
         if (oldData.TokenVersion != currentVersion)
         {
