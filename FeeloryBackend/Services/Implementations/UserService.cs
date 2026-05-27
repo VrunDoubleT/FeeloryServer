@@ -2,6 +2,7 @@
 using FeeloryBackend.Commons;
 using FeeloryBackend.Constants;
 using FeeloryBackend.Data;
+using FeeloryBackend.Extensions;
 using FeeloryBackend.Helpers;
 using FeeloryBackend.Models.DTOs.Commons;
 using FeeloryBackend.Models.DTOs.User;
@@ -14,8 +15,13 @@ namespace FeeloryBackend.Services.Implementations;
 public class UserService : IUserService
 {
     private readonly AppDbContext _db;
+    private readonly ICloudinaryService _cloudinaryService; // Inject Cloudinary
 
-    public UserService(AppDbContext db) => _db = db;
+    public UserService(AppDbContext db, ICloudinaryService cloudinaryService)
+    {
+        _db = db;
+        _cloudinaryService = cloudinaryService;
+    }
 
     public async Task<Result<UserProfileDto>> GetProfileAsync(Guid currentUserId, Guid targetUserId)
     {
@@ -63,8 +69,26 @@ public class UserService : IUserService
             user.DisplayName = request.DisplayName;
         }
 
-        if (request.AvatarUrl != null)
-            user.AvatarUrl = request.AvatarUrl;
+        // Upload Avatar File
+        if (request.Avatar != null)
+        {
+            try
+            {
+                var imageUrl = await _cloudinaryService.UploadImageAsync(request.Avatar);
+
+                user.AvatarUrl = imageUrl;
+            }
+            catch (ArgumentException ex)
+            {
+                // File emptying or incorrect formatting error
+                return Result<UserProfileDto>.Fail(ex.Message);
+            }
+            catch (Exception ex)
+            {
+                // failed uploads from Cloudinary
+                return Result<UserProfileDto>.Fail($"Image upload error: {ex.Message}");
+            }
+        }
 
         await _db.SaveChangesAsync();
 
@@ -74,7 +98,7 @@ public class UserService : IUserService
             DisplayName = user.DisplayName,
             Username = user.Username,
             AvatarUrl = user.AvatarUrl,
-            FriendStatus = "none"
+            FriendStatus = FriendStatusConstants.None
         });
     }
 
@@ -108,26 +132,23 @@ public class UserService : IUserService
 
     private async Task<string> CalculateFriendStatusAsync(Guid currentUserId, Guid targetUserId)
     {
-        if (currentUserId == targetUserId) return "none";
+        if (currentUserId == targetUserId) return FriendStatusConstants.None;
 
-        var minId = currentUserId < targetUserId ? currentUserId : targetUserId;
-        var maxId = currentUserId > targetUserId ? currentUserId : targetUserId;
-
-        bool isFriend = await _db.Friends.AnyAsync(f => f.UserId == minId && f.FriendId == maxId);
-        if (isFriend) return "friend";
+        // Extension Method
+        bool isFriend = await _db.Friends.AreFriendsAsync(currentUserId, targetUserId);
+        if (isFriend) return FriendStatusConstants.Friend;
 
         bool isPending = await _db.FriendRequests.AnyAsync(r =>
             r.Status == FriendRequestConstants.Pending &&
             ((r.SenderId == currentUserId && r.ReceiverId == targetUserId) ||
              (r.SenderId == targetUserId && r.ReceiverId == currentUserId)));
 
-        return isPending ? "pending" : "none";
+        return isPending ? FriendStatusConstants.Pending : FriendStatusConstants.None;
     }
 
     private async Task<Result<CursorPaginationResponse<UserProfileDto>>> ExecuteSearchAsync(
         Guid currentUserId, IQueryable<Models.Entities.User> query, CursorPaginationRequest request)
     {
-        // Apply cursor logic exactly like FriendService
         if (!string.IsNullOrWhiteSpace(request.Cursor))
         {
             var (createdAt, id) = CursorHelper.Decode(request.Cursor);
@@ -140,7 +161,6 @@ public class UserService : IUserService
                 ));
         }
 
-        // Take extra item
         var users = await query
             .Take(request.PageSize + 1)
             .ToListAsync();
@@ -159,9 +179,9 @@ public class UserService : IUserService
             nextCursor = CursorHelper.Encode(lastItem.CreatedAt, lastItem.Id);
         }
 
-        // Optimization: Query once to retrieve all friend statuses for the list
         var targetUserIds = users.Select(u => u.Id).ToList();
 
+        // (Bulk Query) Get your friends list
         var friendships = await _db.Friends
             .AsNoTracking()
             .Where(f => (f.UserId == currentUserId && targetUserIds.Contains(f.FriendId)) ||
@@ -176,10 +196,10 @@ public class UserService : IUserService
             .ToListAsync();
 
         var dtos = users.Select(user => {
-            var minId = currentUserId < user.Id ? currentUserId : user.Id;
-            var maxId = currentUserId > user.Id ? currentUserId : user.Id;
+            bool isFriend = friendships.Any(f =>
+                (f.UserId == currentUserId && f.FriendId == user.Id) ||
+                (f.UserId == user.Id && f.FriendId == currentUserId));
 
-            bool isFriend = friendships.Any(f => f.UserId == minId && f.FriendId == maxId);
             bool isPending = pendingRequests.Any(r =>
                 (r.SenderId == currentUserId && r.ReceiverId == user.Id) ||
                 (r.SenderId == user.Id && r.ReceiverId == currentUserId));
@@ -190,7 +210,7 @@ public class UserService : IUserService
                 DisplayName = user.DisplayName,
                 Username = user.Username,
                 AvatarUrl = user.AvatarUrl,
-                FriendStatus = isFriend ? "friend" : (isPending ? "pending" : "none")
+                FriendStatus = isFriend ? FriendStatusConstants.Friend : (isPending ? FriendStatusConstants.Pending : FriendStatusConstants.None)
             };
         }).ToList();
 
