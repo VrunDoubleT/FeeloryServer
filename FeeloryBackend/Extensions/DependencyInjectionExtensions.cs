@@ -9,14 +9,14 @@ public static class DependencyInjectionExtensions
     {
         services.AddHttpContextAccessor();
         
-        // Register custom services
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IRefreshTokenService, RefreshTokenService>();
         services.AddScoped<IEmailService, EmailService>();
         services.AddScoped<ICloudinaryService, CloudinaryService>();
         services.AddScoped<IPasswordHasherService, PasswordHasherService>();
         services.AddScoped<IFriendService, FriendService>();
-        
+        services.AddScoped<ICalendarService, CalendarService>();
+        services.AddScoped<ICurrentUserService, CurrentUserService>();
         return services;
     }
 }
