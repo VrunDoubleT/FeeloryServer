@@ -1,3 +1,4 @@
+using FeeloryBackend.Commons;
 using FeeloryBackend.Models.DTOs.Post;
 
 namespace FeeloryBackend.Services.Interfaces;
@@ -5,13 +6,13 @@ namespace FeeloryBackend.Services.Interfaces;
 public interface IPostService
 {
     // Create diary post
-    Task<Guid> CreateAsync(Guid userId, CreatePostRequestDto request);
+    Task<Result<Guid>> CreateAsync(Guid userId, CreatePostRequestDto request);
 
     // Update post
-    Task<bool> UpdateAsync(Guid userId, Guid postId, UpdatePostRequestDto request);
+    Task<Result> UpdateAsync(Guid userId, Guid postId, UpdatePostRequestDto request);
 
     // Delete post
-    Task<bool> DeleteAsync(Guid userId, Guid postId);
+    Task<Result> DeleteAsync(Guid userId, Guid postId);
 
     // Get posts by user
     Task<GetMyPostsResponseDto> GetMyPostsAsync(Guid userId, GetMyPostsRequestDto request);

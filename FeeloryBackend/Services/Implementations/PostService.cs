@@ -1,4 +1,5 @@
-﻿using FeeloryBackend.Constants;
+﻿using FeeloryBackend.Commons;
+using FeeloryBackend.Constants;
 using FeeloryBackend.Data;
 using FeeloryBackend.Extensions;
 using FeeloryBackend.Helpers;
@@ -30,62 +31,42 @@ public class PostService : IPostService
     }
 
     // CREATE
-    public async Task<Guid> CreateAsync(Guid userId, CreatePostRequestDto request)
+    public async Task<Result<Guid>> CreateAsync(Guid userId, CreatePostRequestDto request)
     {
         // Validate mood emote
-        bool ownsMoodEmote = await _db.UserPackages
-            .AnyAsync(up =>
-                up.UserId == userId &&
-                up.Package.Items.Any(item =>
-                    item.EmoteId == request.MoodEmoteId));
+        bool canUseEmote = await _db.CanUseEmoteAsync(userId, request.MoodEmoteId);
 
-        if (!ownsMoodEmote)
-            return Guid.Empty;
+        if (!canUseEmote)
+            return Result<Guid>.Fail("You do not have permission to use this mood emote");
+        
+    
 
-        // Validate privacy
-        var validPrivacy = new[]
-        {
-            PostPrivacyConstants.Private,
-            PostPrivacyConstants.Public,
-            PostPrivacyConstants.Custom
-        };
-
-        if (!validPrivacy.Contains(request.Privacy))
-            return Guid.Empty;
-
-        // CUSTOM requires allowed users
+        // CUSTOM validate
         if (request.Privacy == PostPrivacyConstants.Custom)
         {
-            if (request.AllowedUserIds == null ||
-                !request.AllowedUserIds.Any())
-                return Guid.Empty;
+            if (request.AllowedUserIds == null || !request.AllowedUserIds.Any())
+                return Result<Guid>.Fail("AllowedUserIds is required for custom privacy");
+        
 
-            // Check all selected users exist
-            var existingUsers = await _db.Users
-                .CountAsync(u =>
-                    request.AllowedUserIds.Contains(u.Id));
-
+            // Check user exists
+            var existingUsers = await _db.Users.CountAsync(u => request.AllowedUserIds.Contains(u.Id));
             if (existingUsers != request.AllowedUserIds.Count)
-                return Guid.Empty;
-
-            // Check all selected users are friends
+                return Result<Guid>.Fail("Some selected users do not exist");
+            
+            // Check friendship
             foreach (var viewerId in request.AllowedUserIds)
             {
-                bool areFriends = await _db.Friends.AreFriendsAsync(
-                    userId,
-                    viewerId
-                );
-
+                bool areFriends = await _db.Friends.AreFriendsAsync(userId, viewerId);
                 if (!areFriends)
-                    return Guid.Empty;
+                    return Result<Guid>.Fail("Some selected users are not your friends");
+            
             }
         }
 
-        // Upload image to cloudinary
-        var imageUrl = await _cloudinaryService
-            .UploadImageAsync(request.Image);
+        // Upload image
+        var imageUrl = await _cloudinaryService.UploadImageAsync(request.Image);
 
-        // Create post  
+        // Create post
         var post = new Post
         {
             Id = Guid.NewGuid(),
@@ -99,7 +80,7 @@ public class PostService : IPostService
 
         _db.Posts.Add(post);
 
-        // Add viewers if CUSTOM
+        // Add viewers
         if (request.Privacy == PostPrivacyConstants.Custom)
         {
             var viewers = request.AllowedUserIds!
@@ -117,35 +98,27 @@ public class PostService : IPostService
 
         // Publish RabbitMQ
         await _postPublisher.PublishPostAsync(
-                new PostCreatedMessage
-                {
-                    PostId = post.Id,
-                    UserId = userId,
-                    Privacy = request.Privacy,
-                    AllowedUserIds = request.AllowedUserIds,
-                    CreatedAt = post.CreatedAt
-                });
-        
-        return post.Id;
+            new PostCreatedMessage
+            {
+                PostId = post.Id,
+                UserId = userId,
+                Privacy = request.Privacy,
+                AllowedUserIds = request.AllowedUserIds,
+                CreatedAt = post.CreatedAt
+            });
+
+        return Result<Guid>.Ok(post.Id);
     }
 
     // UPDATE
-    public async Task<bool> UpdateAsync(Guid userId, Guid postId, UpdatePostRequestDto request)
+    public async Task<Result> UpdateAsync(Guid userId, Guid postId, UpdatePostRequestDto request)
     {
         // Find post
         var post = await _db.Posts
             .FirstOrDefaultAsync(p => p.Id == postId && p.UserId == userId);
 
-        if (post == null) return false;
-
-        // Validate privacy
-        var validPrivacy = new[]
-        {
-            PostPrivacyConstants.Private,
-            PostPrivacyConstants.Public,
-            PostPrivacyConstants.Custom
-        };
-        if (!validPrivacy.Contains(request.Privacy)) return false;
+        if (post == null) 
+            return Result.Fail("Post not found");
 
         // Current viewers
         var oldViewerIds = (await _db.PostViewers
@@ -159,26 +132,23 @@ public class PostService : IPostService
         if (request.Privacy == PostPrivacyConstants.Custom)
         {
             if (request.AllowedUserIds == null || !request.AllowedUserIds.Any())
-            {
-                return false;
-            }
-
+                return Result.Fail( "AllowedUserIds is required for custom privacy" );
+            
             // Check user exists
             var existingUsers = await _db.Users
                 .CountAsync(u => request.AllowedUserIds.Contains(u.Id));
 
             if (existingUsers != request.AllowedUserIds.Count)
-            {
-                return false;
-            }
-
+                return Result.Fail( "Some selected users do not exist" );
+            
             // Check friendship
             foreach (var viewerId in request.AllowedUserIds)
             {
                 bool areFriends = await _db.Friends
                 .AreFriendsAsync(userId, viewerId);
 
-                if (!areFriends) return false;
+                if (!areFriends) 
+                    return Result.Fail( "Some selected users are not your friends" );
             }
 
             newViewerIds = request.AllowedUserIds.ToHashSet();
@@ -227,19 +197,17 @@ public class PostService : IPostService
             });
         }
 
-        return true;
+        return Result.Ok();
     }
 
     // DELETE
-    public async Task<bool> DeleteAsync(Guid userId, Guid postId)
+    public async Task<Result> DeleteAsync(Guid userId, Guid postId)
     {
         var post = await _db.Posts
                 .FirstOrDefaultAsync(p => p.Id == postId && p.UserId == userId && p.DeletedAt == null);
 
         if (post == null)
-        {
-            return false;
-        }
+            return Result.Fail("Post not found");
 
         // Soft delete
         post.DeletedAt = DateTime.UtcNow;
@@ -254,7 +222,7 @@ public class PostService : IPostService
                 }
             );
 
-        return true;
+        return Result.Ok();
     }
 
     // GET POSTS BY USER
