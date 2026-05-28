@@ -16,6 +16,7 @@ public static class DependencyInjectionExtensions
         services.AddScoped<ICloudinaryService, CloudinaryService>();
         services.AddScoped<IPasswordHasherService, PasswordHasherService>();
         services.AddScoped<IFriendService, FriendService>();
+        services.AddScoped<IPostService, PostService>();
         
         return services;
     }

@@ -20,9 +20,13 @@ public static class RabbitMQExtensions
 
         // Publishers
         services.AddSingleton<EmailPublisher>();
+        services.AddSingleton<PostPublisher>();
 
         // Consumers (Background Services)
         services.AddHostedService<EmailConsumerService>();
+        services.AddHostedService<PostCreatedConsumerService>();
+        services.AddHostedService<PostPermissionConsumerService>();
+        services.AddHostedService<PostDeletedConsumerService>();
 
         return services;
     }

@@ -8,11 +8,17 @@ public interface IPostService
     Task<Guid> CreateAsync(Guid userId, CreatePostRequestDto request);
 
     // Update post
-    Task UpdateAsync(Guid userId, Guid postId, UpdatePostRequestDto request);
+    Task<bool> UpdateAsync(Guid userId, Guid postId, UpdatePostRequestDto request);
 
     // Delete post
-    Task DeleteAsync(Guid userId, Guid postId);
+    Task<bool> DeleteAsync(Guid userId, Guid postId);
 
     // Get posts by user
-    Task<List<PostDto>> GetByUserAsync(Guid userId);
+    Task<GetMyPostsResponseDto> GetMyPostsAsync(Guid userId, GetMyPostsRequestDto request);
+    
+    // Get posts by id
+    Task<PostDetailDto?> GetByIdAsync(Guid currentUserId, Guid postId);
+    
+    // Get friend post feed
+    Task<GetFriendFeedResponseDto> GetFriendFeedAsync(Guid currentUserId, GetFriendFeedRequestDto request);
 }
