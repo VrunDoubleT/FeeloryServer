@@ -32,7 +32,7 @@ public class DaySharesController : ControllerBase
             ? Ok(new ApiResponse<object>(null, "DayShare created successfully"))
             : BadRequest(new ApiErrorResponse(result.Error!));
     }
-    
+
     //Update
     [HttpPatch]
     public async Task<IActionResult> Update([FromBody] UpdateDayShareRequestDto dto)
@@ -45,7 +45,7 @@ public class DaySharesController : ControllerBase
                 null, "DayShare updated successfully"))
             : BadRequest(new ApiErrorResponse(result.Error!));
     }
-    
+
     //getid
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id)
@@ -58,7 +58,7 @@ public class DaySharesController : ControllerBase
                 result.Data, "Success"))
             : BadRequest(new ApiErrorResponse(result.Error!));
     }
-    
+
     //dele
     [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
@@ -71,19 +71,18 @@ public class DaySharesController : ControllerBase
                 null, "DayShare deleted successfully"))
             : BadRequest(new ApiErrorResponse(result.Error!));
     }
-    
+
     //get feed
     [HttpGet("feed")]
     public async Task<IActionResult> GetFeed(
-        [FromQuery] string? cursor   = null,
-        [FromQuery] int     pageSize = 10)
+        [FromQuery] string? cursor = null,
+        [FromQuery] int pageSize = 10)
     {
         var result = await _dayShareService
             .GetFeedAsync(CurrentUserId, cursor, pageSize);
 
         return result.IsSuccess
-            ? Ok(new ApiResponse<DayShareFeedPagedDto>(
-                result.Data, "Success"))
+            ? Ok(result.Data)
             : BadRequest(new ApiErrorResponse(result.Error!));
     }
 }

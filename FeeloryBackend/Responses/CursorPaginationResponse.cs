@@ -8,10 +8,10 @@ public class CursorPaginationResponse<T>
 
     public IEnumerable<T> Data { get; set; }
 
-    // Cursor cho page tiếp theo
+    // // Cursor for the next page  
     public string? NextCursor { get; set; }
 
-    // Có còn dữ liệu không
+    // Indicates whether more data exists
     public bool HasNextPage { get; set; }
 
     public CursorPaginationResponse(

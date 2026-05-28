@@ -7,6 +7,7 @@ using FeeloryBackend.Messaging.RabbitMQ.Messages;
 using FeeloryBackend.Messaging.RabbitMQ.Publishers;
 using FeeloryBackend.Models.DTOs.DayShare;
 using FeeloryBackend.Models.Entities;
+using FeeloryBackend.Responses;
 using FeeloryBackend.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
@@ -23,7 +24,7 @@ public class DayShareService : IDayShareService
         _publisher = publisher;
     }
 
-    
+
     public async Task<Result> CreateAsync(Guid currentUserId, CreateDayShareRequestDto dto)
     {
         // 1. Validate privacy type
@@ -31,12 +32,12 @@ public class DayShareService : IDayShareService
             dto.Privacy != DayShareTypeConstants.Custom)
         {
             return Result.Fail("Invalid privacy type.");
-        } 
-        
-     
+        }
+
+
         // 2. Validate selected posts belong to user and fall on the given date
         var dayStart = DateTime.SpecifyKind(dto.Date.ToDateTime(TimeOnly.MinValue), DateTimeKind.Utc);
-        var dayEnd   = dayStart.AddDays(1);
+        var dayEnd = dayStart.AddDays(1);
 
         var matchedPosts = await _db.Posts
             .Where(p =>
@@ -74,7 +75,8 @@ public class DayShareService : IDayShareService
                 return Result.Fail("Some allowed users are not your friends.");
 
             viewerIds = allowedDistinct;
-        } 
+        }
+
         // 4. Check duplicate DayShare on the same day
         bool exists = await _db.DayShares.AnyAsync(x =>
             x.OwnerId == currentUserId &&
@@ -85,16 +87,17 @@ public class DayShareService : IDayShareService
         {
             return Result.Fail("You already shared this day.");
         }
+
         // 5. Persist DayShare
         var dayShare = new DayShare
         {
-            Id          = Guid.NewGuid(),
-            OwnerId     = currentUserId,
+            Id = Guid.NewGuid(),
+            OwnerId = currentUserId,
             Description = dto.Description,
             SharedDate = DateTime.SpecifyKind(
-                dto.Date.ToDateTime(TimeOnly.MinValue), 
+                dto.Date.ToDateTime(TimeOnly.MinValue),
                 DateTimeKind.Utc),
-            ShareType   = dto.Privacy
+            ShareType = dto.Privacy
         };
 
         _db.DayShares.Add(dayShare);
@@ -104,11 +107,11 @@ public class DayShareService : IDayShareService
         var daySharePosts = dto.SelectedPostIds
             .Select((postId, index) => new DaySharePost
             {
-                Id           = Guid.NewGuid(),
-                DayShareId   = dayShare.Id,
-                PostId       = postId,
+                Id = Guid.NewGuid(),
+                DayShareId = dayShare.Id,
+                PostId = postId,
                 DisplayOrder = index + 1,
-                CreatedAt    = now        
+                CreatedAt = now
             });
 
         _db.DaySharePosts.AddRange(daySharePosts);
@@ -118,9 +121,9 @@ public class DayShareService : IDayShareService
         {
             var viewers = viewerIds.Select(viewerId => new DayShareViewer
             {
-                Id         = Guid.NewGuid(),
+                Id = Guid.NewGuid(),
                 DayShareId = dayShare.Id,
-                ViewerId   = viewerId
+                ViewerId = viewerId
             });
 
             _db.DayShareViewers.AddRange(viewers);
@@ -133,197 +136,196 @@ public class DayShareService : IDayShareService
         {
             Action = DayShareFeedMessage.ActionCreated,
             DayShareId = dayShare.Id,
-            ViewerIds  = viewerIds
+            ViewerIds = viewerIds
         });
 
         return Result.Ok();
     }
 
-    public async Task<Result> UpdateAsync( Guid currentUserId, UpdateDayShareRequestDto dto)
+    public async Task<Result> UpdateAsync(Guid currentUserId, UpdateDayShareRequestDto dto)
     {
-    // 1. Validate privacy
-    if (dto.Privacy != DayShareTypeConstants.Friends &&
-        dto.Privacy != DayShareTypeConstants.Custom)
-        return Result.Fail("Invalid privacy type.");
+        // 1. Validate privacy
+        if (dto.Privacy != DayShareTypeConstants.Friends &&
+            dto.Privacy != DayShareTypeConstants.Custom)
+            return Result.Fail("Invalid privacy type.");
 
-    // 2. Find DayShare and verify ownership
-    var dayShare = await _db.DayShares
-        .FirstOrDefaultAsync(x =>
-            x.Id == dto.DayShareId &&
-            x.DeletedAt == null);
+        // 2. Find DayShare and verify ownership
+        var dayShare = await _db.DayShares
+            .FirstOrDefaultAsync(x =>
+                x.Id == dto.DayShareId &&
+                x.DeletedAt == null);
 
-    if (dayShare is null)
-        return Result.Fail("DayShare not found.");
+        if (dayShare is null)
+            return Result.Fail("DayShare not found.");
 
-    if (dayShare.OwnerId != currentUserId)
-        return Result.Fail("You are not the owner of this DayShare.");
+        if (dayShare.OwnerId != currentUserId)
+            return Result.Fail("You are not the owner of this DayShare.");
 
-    // 3. Validate and update posts if provided
-    if (dto.SelectedPostIds is not null &&
-        dto.SelectedPostIds.Count > 0)
-    {
-        var dayStart = DateTime.SpecifyKind(
-            dayShare.SharedDate.Date,
-            DateTimeKind.Utc);
-        var dayEnd = dayStart.AddDays(1);
-
-        var distinctPostIds = dto.SelectedPostIds.Distinct().ToList();
-
-        var matchedPosts = await _db.Posts
-            .Where(p =>
-                distinctPostIds.Contains(p.Id) &&
-                p.UserId == currentUserId &&
-                p.CreatedAt >= dayStart &&
-                p.CreatedAt < dayEnd)
-            .Select(p => p.Id)
-            .ToListAsync();
-
-        if (matchedPosts.Count != distinctPostIds.Count)
-            return Result.Fail(
-                "Some posts are invalid, do not belong to you, or are not from the given date.");
-
-        var oldDaySharePosts = await _db.DaySharePosts
-            .Where(x => x.DayShareId == dayShare.Id)
-            .ToListAsync();
-
-        var oldPostIds = oldDaySharePosts
-            .Select(x => x.PostId)
-            .ToList();
-
-        var removedPostIds = oldPostIds.Except(distinctPostIds).ToList();
-        var addedPostIds   = distinctPostIds.Except(oldPostIds).ToList();
-
-        // Remove dropped posts
-        if (removedPostIds.Any())
+        // 3. Validate and update posts if provided
+        if (dto.SelectedPostIds is not null &&
+            dto.SelectedPostIds.Count > 0)
         {
-            _db.DaySharePosts.RemoveRange(
-                oldDaySharePosts.Where(x =>
-                    removedPostIds.Contains(x.PostId)));
-        }
+            var dayStart = DateTime.SpecifyKind(
+                dayShare.SharedDate.Date,
+                DateTimeKind.Utc);
+            var dayEnd = dayStart.AddDays(1);
 
-        // Add new posts
-        var newDaySharePosts = addedPostIds
-            .Select(postId => new DaySharePost
+            var distinctPostIds = dto.SelectedPostIds.Distinct().ToList();
+
+            var matchedPosts = await _db.Posts
+                .Where(p =>
+                    distinctPostIds.Contains(p.Id) &&
+                    p.UserId == currentUserId &&
+                    p.CreatedAt >= dayStart &&
+                    p.CreatedAt < dayEnd)
+                .Select(p => p.Id)
+                .ToListAsync();
+
+            if (matchedPosts.Count != distinctPostIds.Count)
+                return Result.Fail(
+                    "Some posts are invalid, do not belong to you, or are not from the given date.");
+
+            var oldDaySharePosts = await _db.DaySharePosts
+                .Where(x => x.DayShareId == dayShare.Id)
+                .ToListAsync();
+
+            var oldPostIds = oldDaySharePosts
+                .Select(x => x.PostId)
+                .ToList();
+
+            var removedPostIds = oldPostIds.Except(distinctPostIds).ToList();
+            var addedPostIds = distinctPostIds.Except(oldPostIds).ToList();
+
+            // Remove dropped posts
+            if (removedPostIds.Any())
             {
-                Id           = Guid.NewGuid(),
-                DayShareId   = dayShare.Id,
-                PostId       = postId,
-                DisplayOrder = 0
-            })
-            .ToList();
+                _db.DaySharePosts.RemoveRange(
+                    oldDaySharePosts.Where(x =>
+                        removedPostIds.Contains(x.PostId)));
+            }
 
-        if (addedPostIds.Any())
-            _db.DaySharePosts.AddRange(newDaySharePosts);
+            // Add new posts
+            var newDaySharePosts = addedPostIds
+                .Select(postId => new DaySharePost
+                {
+                    Id = Guid.NewGuid(),
+                    DayShareId = dayShare.Id,
+                    PostId = postId,
+                    DisplayOrder = 0
+                })
+                .ToList();
 
-        // Reorder all posts according to SelectedPostIds order
-        var allPosts = oldDaySharePosts
-            .Where(x => !removedPostIds.Contains(x.PostId))
-            .Concat(newDaySharePosts)
-            .ToList();
+            if (addedPostIds.Any())
+                _db.DaySharePosts.AddRange(newDaySharePosts);
 
-        foreach (var post in allPosts)
-        {
-            post.DisplayOrder = distinctPostIds.IndexOf(post.PostId) + 1;
+            // Reorder all posts according to SelectedPostIds order
+            var allPosts = oldDaySharePosts
+                .Where(x => !removedPostIds.Contains(x.PostId))
+                .Concat(newDaySharePosts)
+                .ToList();
+
+            foreach (var post in allPosts)
+            {
+                post.DisplayOrder = distinctPostIds.IndexOf(post.PostId) + 1;
+            }
         }
-    }
 
-    // 4. Get old viewer list from correct source
-    var oldViewerIds = dayShare.ShareType == DayShareTypeConstants.Custom
-        ? await _db.DayShareViewers
-            .Where(x => x.DayShareId == dayShare.Id)
-            .Select(x => x.ViewerId)
-            .ToListAsync()
-        : await _db.Friends
+        // 4. Get old viewer list from correct source
+        var oldViewerIds = dayShare.ShareType == DayShareTypeConstants.Custom
+            ? await _db.DayShareViewers
+                .Where(x => x.DayShareId == dayShare.Id)
+                .Select(x => x.ViewerId)
+                .ToListAsync()
+            : await _db.Friends
+                .GetFriendsOfUser(currentUserId)
+                .Select(x => x.UserId == currentUserId ? x.FriendId : x.UserId)
+                .Distinct()
+                .ToListAsync();
+
+        // 5. Get new viewer list based on updated privacy
+        var friendIds = await _db.Friends
             .GetFriendsOfUser(currentUserId)
             .Select(x => x.UserId == currentUserId ? x.FriendId : x.UserId)
             .Distinct()
             .ToListAsync();
 
-    // 5. Get new viewer list based on updated privacy
-    var friendIds = await _db.Friends
-        .GetFriendsOfUser(currentUserId)
-        .Select(x => x.UserId == currentUserId ? x.FriendId : x.UserId)
-        .Distinct()
-        .ToListAsync();
+        List<Guid> newViewerIds;
 
-    List<Guid> newViewerIds;
+        if (dto.Privacy == DayShareTypeConstants.Friends)
+        {
+            newViewerIds = friendIds;
+        }
+        else
+        {
+            if (dto.AllowedUserIds is null || dto.AllowedUserIds.Count == 0)
+                return Result.Fail(
+                    "At least one allowed friend is required for Custom privacy.");
 
-    if (dto.Privacy == DayShareTypeConstants.Friends)
-    {
-        newViewerIds = friendIds;
-    }
-    else
-    {
-        if (dto.AllowedUserIds is null || dto.AllowedUserIds.Count == 0)
-            return Result.Fail(
-                "At least one allowed friend is required for Custom privacy.");
+            var allowedDistinct = dto.AllowedUserIds.Distinct().ToList();
 
-        var allowedDistinct = dto.AllowedUserIds.Distinct().ToList();
+            if (allowedDistinct.Any(id => !friendIds.Contains(id)))
+                return Result.Fail("Some allowed users are not your friends.");
 
-        if (allowedDistinct.Any(id => !friendIds.Contains(id)))
-            return Result.Fail("Some allowed users are not your friends.");
+            newViewerIds = allowedDistinct;
+        }
 
-        newViewerIds = allowedDistinct;
-    }
+        // 6. Diff old vs new viewers
+        var removedViewerIds = oldViewerIds.Except(newViewerIds).ToList();
+        var addedViewerIds = newViewerIds.Except(oldViewerIds).ToList();
 
-    // 6. Diff old vs new viewers
-    var removedViewerIds = oldViewerIds.Except(newViewerIds).ToList();
-    var addedViewerIds   = newViewerIds.Except(oldViewerIds).ToList();
+        // 7. Update DayShare fields
+        dayShare.Description = dto.Description;
+        dayShare.ShareType = dto.Privacy;
+        dayShare.UpdatedAt = DateTime.UtcNow;
 
-    // 7. Update DayShare fields
-    dayShare.Description = dto.Description;
-    dayShare.ShareType   = dto.Privacy;
-    dayShare.UpdatedAt   = DateTime.UtcNow;
+        // 8. Update DayShareViewers
+        var oldViewers = await _db.DayShareViewers
+            .Where(x => x.DayShareId == dayShare.Id)
+            .ToListAsync();
 
-    // 8. Update DayShareViewers
-    var oldViewers = await _db.DayShareViewers
-        .Where(x => x.DayShareId == dayShare.Id)
-        .ToListAsync();
+        _db.DayShareViewers.RemoveRange(oldViewers);
 
-    _db.DayShareViewers.RemoveRange(oldViewers);
+        if (dto.Privacy == DayShareTypeConstants.Custom)
+        {
+            _db.DayShareViewers.AddRange(newViewerIds.Select(viewerId =>
+                new DayShareViewer
+                {
+                    Id = Guid.NewGuid(),
+                    DayShareId = dayShare.Id,
+                    ViewerId = viewerId
+                }));
+        }
 
-    if (dto.Privacy == DayShareTypeConstants.Custom)
-    {
-        _db.DayShareViewers.AddRange(newViewerIds.Select(viewerId =>
-            new DayShareViewer
+
+        // 9. Save all changes at once
+        await _db.SaveChangesAsync();
+
+        // 10. Publish feed change events
+        if (removedViewerIds.Any())
+        {
+            await _publisher.PublishAsync(new DayShareFeedMessage
             {
-                Id         = Guid.NewGuid(),
+                Action = DayShareFeedMessage.ActionRemoved,
                 DayShareId = dayShare.Id,
-                ViewerId   = viewerId
-            }));
-    }
+                ViewerIds = removedViewerIds
+            });
+        }
 
-    
-    // 9. Save all changes at once
-    await _db.SaveChangesAsync();
-
-    // 10. Publish feed change events
-    if (removedViewerIds.Any())
-    {
-        await _publisher.PublishAsync(new DayShareFeedMessage
+        if (addedViewerIds.Any())
         {
-            Action     = DayShareFeedMessage.ActionRemoved,
-            DayShareId = dayShare.Id,
-            ViewerIds  = removedViewerIds
-        });
-    }
+            await _publisher.PublishAsync(new DayShareFeedMessage
+            {
+                Action = DayShareFeedMessage.ActionAdded,
+                DayShareId = dayShare.Id,
+                ViewerIds = addedViewerIds
+            });
+        }
 
-    if (addedViewerIds.Any())
-    {
-        await _publisher.PublishAsync(new DayShareFeedMessage
-        {
-            Action     = DayShareFeedMessage.ActionAdded,
-            DayShareId = dayShare.Id,
-            ViewerIds  = addedViewerIds
-        });
+        return Result.Ok();
     }
-
-    return Result.Ok();
-}
 
     public async Task<Result<DayShareDetailDto>> GetByIdAsync(Guid currentUserId, Guid dayShareId)
     {
-
         // 1. Fetch DayShare
         var dayShare = await _db.DayShares
             .Where(x => x.Id == dayShareId && x.DeletedAt == null)
@@ -334,12 +336,12 @@ public class DayShareService : IDayShareService
                 x.Description,
                 x.ShareType,
                 x.OwnerId,
-            
+
                 Owner = new DayShareOwnerDto
                 {
-                    Id          = x.Owner.Id,
+                    Id = x.Owner.Id,
                     DisplayName = x.Owner.DisplayName,
-                    AvatarUrl   = x.Owner.AvatarUrl
+                    AvatarUrl = x.Owner.AvatarUrl
                 }
             })
             .FirstOrDefaultAsync();
@@ -368,15 +370,15 @@ public class DayShareService : IDayShareService
             .OrderBy(x => x.DisplayOrder)
             .Select(x => new DaySharePostItemDto
             {
-                Id          = x.Post.Id,
-                ImageUrl    = x.Post.ImageUrl,
+                Id = x.Post.Id,
+                ImageUrl = x.Post.ImageUrl,
                 Description = x.Post.Description,
-                MoodEmote   = x.Post.MoodEmote == null
+                MoodEmote = x.Post.MoodEmote == null
                     ? null
                     : new DayShareMoodEmoteDto
                     {
-                        Id       = x.Post.MoodEmote.Id,
-                        Name     = x.Post.MoodEmote.Name,
+                        Id = x.Post.MoodEmote.Id,
+                        Name = x.Post.MoodEmote.Name,
                         ImageUrl = x.Post.MoodEmote.ImageUrl
                     },
                 CreatedAt = x.Post.CreatedAt
@@ -385,13 +387,12 @@ public class DayShareService : IDayShareService
 
         return Result<DayShareDetailDto>.Ok(new DayShareDetailDto
         {
-            Id          = dayShare.Id,
-            Date        = DateOnly.FromDateTime(dayShare.SharedDate),
+            Id = dayShare.Id,
+            Date = DateOnly.FromDateTime(dayShare.SharedDate),
             Description = dayShare.Description,
-            Privacy     = dayShare.ShareType,
-            Owner       = dayShare.Owner,
-            Posts       = posts,
-       
+            Privacy = dayShare.ShareType,
+            Owner = dayShare.Owner,
+            Posts = posts,
         });
     }
 
@@ -421,81 +422,80 @@ public class DayShareService : IDayShareService
         // 3. Publish event to remove from all feeds
         await _publisher.PublishAsync(new DayShareFeedMessage
         {
-            Action     = DayShareFeedMessage.ActionDeleted,
+            Action = DayShareFeedMessage.ActionDeleted,
             DayShareId = dayShare.Id,
-          //  ViewerIds  = new List<Guid>()
+            //  ViewerIds  = new List<Guid>()
         });
 
         return Result.Ok();
     }
-    
-   public async Task<Result<DayShareFeedPagedDto>> GetFeedAsync(
-    Guid currentUserId,
-    string? cursor,
-    int pageSize)
-{
-    if (pageSize < 1) pageSize = 10;
-    if (pageSize > 50) pageSize = 50;
 
-    // Decode cursor to get the last PostedAt timestamp
-    DateTime? cursorTime = null;
-
-    if (!string.IsNullOrEmpty(cursor))
+    public async Task<Result<CursorPaginationResponse<DayShareFeedItemDto>>> GetFeedAsync(
+        Guid currentUserId,
+        string? cursor,
+        int pageSize)
     {
-        var decoded = Encoding.UTF8.GetString(
-            Convert.FromBase64String(cursor));
+        if (pageSize < 1) pageSize = 10;
+        if (pageSize > 50) pageSize = 50;
 
-        if (DateTime.TryParse(decoded, out var parsed))
-            cursorTime = parsed;
-    }
+        // Decode cursor to get the last PostedAt timestamp
+        DateTime? cursorTime = null;
 
-    var query = _db.DayShareFeeds
-        .Where(x =>
-            x.ViewerId == currentUserId &&
-            x.DayShare.DeletedAt == null &&
-            (cursorTime == null || x.PostedAt < cursorTime))
-        .OrderByDescending(x => x.PostedAt);
-
-    // Fetch pageSize + 1 to determine if more data exists
-    var items = await query
-        .Take(pageSize + 1)
-        .Select(x => new DayShareFeedItemDto
+        if (!string.IsNullOrEmpty(cursor))
         {
-            DayShareId  = x.DayShareId,
-            Date        = DateOnly.FromDateTime(x.DayShare.SharedDate),
-            Description = x.DayShare.Description,
-            Owner       = new DayShareOwnerDto
+            var decoded = Encoding.UTF8.GetString(
+                Convert.FromBase64String(cursor));
+
+            if (DateTime.TryParse(decoded, out var parsed))
+                cursorTime = parsed;
+        }
+
+        var query = _db.DayShareFeeds
+            .Where(x =>
+                x.ViewerId == currentUserId &&
+                x.DayShare.DeletedAt == null &&
+                (cursorTime == null || x.PostedAt < cursorTime))
+            .OrderByDescending(x => x.PostedAt);
+
+        // Fetch pageSize + 1 to determine if more data exists
+        var items = await query
+            .Take(pageSize + 1)
+            .Select(x => new DayShareFeedItemDto
             {
-                Id          = x.DayShare.Owner.Id,
-                DisplayName = x.DayShare.Owner.DisplayName,
-                AvatarUrl   = x.DayShare.Owner.AvatarUrl
-            },
-            PostCount = x.DayShare.DaySharePosts.Count,
-            CreatedAt = x.PostedAt
-        })
-        .ToListAsync();
+                DayShareId = x.DayShareId,
+                Date = DateOnly.FromDateTime(x.DayShare.SharedDate),
+                Description = x.DayShare.Description,
+                Owner = new DayShareOwnerDto
+                {
+                    Id = x.DayShare.Owner.Id,
+                    DisplayName = x.DayShare.Owner.DisplayName,
+                    AvatarUrl = x.DayShare.Owner.AvatarUrl
+                },
+                PostCount = x.DayShare.DaySharePosts.Count,
+                CreatedAt = x.PostedAt
+            })
+            .ToListAsync();
 
-    var hasMore = items.Count > pageSize;
+        var hasNextPage = items.Count > pageSize;
 
-    if (hasMore)
-        items = items.Take(pageSize).ToList();
+        if (hasNextPage)
+            items = items.Take(pageSize).ToList();
 
-    // Encode next cursor from last item's PostedAt
-    string? nextCursor = null;
+        // Encode next cursor from last item's PostedAt
+        string? nextCursor = null;
 
-    if (hasMore)
-    {
-        var lastItem  = items.Last();
-        var cursorStr = lastItem.CreatedAt.ToString("O");
-        nextCursor    = Convert.ToBase64String(
-            Encoding.UTF8.GetBytes(cursorStr));
+        if (hasNextPage)
+        {
+            var lastItem = items.Last();
+            var cursorStr = lastItem.CreatedAt.ToString("O");
+            nextCursor = Convert.ToBase64String(
+                Encoding.UTF8.GetBytes(cursorStr));
+        }
+
+        return Result<CursorPaginationResponse<DayShareFeedItemDto>>.Ok(
+            new CursorPaginationResponse<DayShareFeedItemDto>(
+                items,
+                nextCursor,
+                hasNextPage));
     }
-
-    return Result<DayShareFeedPagedDto>.Ok(new DayShareFeedPagedDto
-    {
-        Items      = items,
-        NextCursor = nextCursor,
-        HasMore    = hasMore
-    });
-}
 }
