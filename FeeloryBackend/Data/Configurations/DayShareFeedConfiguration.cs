@@ -8,7 +8,7 @@ public class DayShareFeedConfiguration : IEntityTypeConfiguration<DayShareFeed>
 {
     public void Configure(EntityTypeBuilder<DayShareFeed> builder)
     {
-        builder.ToTable("DayShareFeed");
+        builder.ToTable("DayShareFeeds");
         
         builder.HasKey(dsf => dsf.Id);
         

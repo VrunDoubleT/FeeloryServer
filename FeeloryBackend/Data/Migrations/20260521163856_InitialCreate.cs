@@ -369,7 +369,7 @@ namespace FeeloryBackend.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "DayShareFeed",
+                name: "DayShareFeeds",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
@@ -532,12 +532,12 @@ namespace FeeloryBackend.Data.Migrations
 
             migrationBuilder.CreateIndex(
                 name: "IX_DayShareFeed_DayShareId",
-                table: "DayShareFeed",
+                table: "DayShareFeeds",
                 column: "DayShareId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_DayShareFeed_ViewerId",
-                table: "DayShareFeed",
+                table: "DayShareFeeds",
                 column: "ViewerId");
 
             migrationBuilder.CreateIndex(
@@ -758,7 +758,7 @@ namespace FeeloryBackend.Data.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropTable(
-                name: "DayShareFeed");
+                name: "DayShareFeeds");
 
             migrationBuilder.DropTable(
                 name: "DaySharePosts");

@@ -59,7 +59,7 @@ namespace FeeloryBackend.Data.Migrations
                     b.ToTable("DayShares", (string)null);
                 });
 
-            modelBuilder.Entity("FeeloryBackend.Models.Entities.DayShareFeed", b =>
+            modelBuilder.Entity("FeeloryBackend.Models.Entities.DayShareFeeds", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -80,7 +80,7 @@ namespace FeeloryBackend.Data.Migrations
 
                     b.HasIndex("ViewerId");
 
-                    b.ToTable("DayShareFeed");
+                    b.ToTable("DayShareFeeds");
                 });
 
             modelBuilder.Entity("FeeloryBackend.Models.Entities.DaySharePost", b =>
@@ -689,7 +689,7 @@ namespace FeeloryBackend.Data.Migrations
                     b.Navigation("Owner");
                 });
 
-            modelBuilder.Entity("FeeloryBackend.Models.Entities.DayShareFeed", b =>
+            modelBuilder.Entity("FeeloryBackend.Models.Entities.DayShareFeeds", b =>
                 {
                     b.HasOne("FeeloryBackend.Models.Entities.DayShare", "DayShare")
                         .WithMany("DayShareFeeds")

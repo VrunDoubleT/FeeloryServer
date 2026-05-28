@@ -72,13 +72,14 @@ public class DaySharesController : ControllerBase
             : BadRequest(new ApiErrorResponse(result.Error!));
     }
     
+    //get feed
     [HttpGet("feed")]
     public async Task<IActionResult> GetFeed(
-        [FromQuery] int page     = 1,
-        [FromQuery] int pageSize = 10)
+        [FromQuery] string? cursor   = null,
+        [FromQuery] int     pageSize = 10)
     {
         var result = await _dayShareService
-            .GetFeedAsync(CurrentUserId, page, pageSize);
+            .GetFeedAsync(CurrentUserId, cursor, pageSize);
 
         return result.IsSuccess
             ? Ok(new ApiResponse<DayShareFeedPagedDto>(
