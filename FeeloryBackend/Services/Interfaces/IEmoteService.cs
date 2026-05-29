@@ -1,15 +1,12 @@
+using FeeloryBackend.Commons;
 using FeeloryBackend.Models.DTOs.Emote;
 
 namespace FeeloryBackend.Services.Interfaces;
 
 public interface IEmoteService
 {
-    // Get all emotes
-    Task<List<EmoteDto>> GetAllAsync();
-    
-    // Get emote by id
-    Task<EmoteDto> GetByIdAsync(Guid emoteId);
-    
-    // Get user owned emotes
-    Task<List<EmoteDto>> GetUserEmotesAsync(Guid userId);
+    Task<Result<Dictionary<string, List<EmoteDto>>>> GetAllGroupedAsync();
+    Task<Result<EmoteDto>> GetByIdAsync(Guid id);
+    Task<Result<List<UserEmoteDto>>> GetUserEmotesAsync(Guid userId);
+    Task<Result<List<EmoteDto>>> GetRecentEmotesAsync(Guid userId, int limit);
 }
