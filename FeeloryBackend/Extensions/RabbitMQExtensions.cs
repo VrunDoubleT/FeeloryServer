@@ -24,6 +24,14 @@ public static class RabbitMQExtensions
         // Consumers (Background Services)
         services.AddHostedService<EmailConsumerService>();
 
+
+        services.AddScoped<ReactionPublisher>();
+        // Consumers (Background Services)
+        services.AddHostedService<EmailConsumerService>();
+    
+        services.AddHostedService<ReactionNotificationConsumer>();
+        services.AddHostedService<ReactionTaskConsumer>();
+
         return services;
     }
 }

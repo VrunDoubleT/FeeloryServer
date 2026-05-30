@@ -8,7 +8,7 @@ public static class DependencyInjectionExtensions
     public static IServiceCollection AddApplicationServices(this IServiceCollection services)
     {
         services.AddHttpContextAccessor();
-        
+
         // Register custom services
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IRefreshTokenService, RefreshTokenService>();
@@ -17,6 +17,9 @@ public static class DependencyInjectionExtensions
         services.AddScoped<IPasswordHasherService, PasswordHasherService>();
         services.AddScoped<IFriendService, FriendService>();
         
+        services.AddScoped<IReactionService, ReactionService>();
+        services.AddScoped<ICurrentUserService, CurrentUserService>();
+
         return services;
     }
 }
