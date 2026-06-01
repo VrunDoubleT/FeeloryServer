@@ -52,7 +52,7 @@ public class EmotesController : ControllerBase
         var result = await _emoteService.GetUserEmotesAsync(CurrentUserId);
 
         return result.IsSuccess
-            ? Ok(new ApiResponse<List<UserEmoteDto>>(result.Data!, "Retrieved user emotes successfully"))
+            ? Ok(new ApiResponse<Dictionary<string, List<UserEmoteDto>>>(result.Data!, "Retrieved user emotes successfully"))
             : BadRequest(new ApiErrorResponse(result.Error!));
     }
 

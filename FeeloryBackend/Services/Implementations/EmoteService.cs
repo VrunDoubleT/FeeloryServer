@@ -13,7 +13,7 @@ public class EmoteService : IEmoteService
     private readonly AppDbContext _db;
     private readonly IDistributedCache _cache;
 
-    private const string CacheKey = "all_emotes_grouped_v2";
+    private const string CacheKey = "emotes:grouped:all";
 
     public EmoteService(AppDbContext db, IDistributedCache cache)
     {
@@ -67,34 +67,44 @@ public class EmoteService : IEmoteService
         return Result<EmoteDto>.Ok(emote);
     }
 
-    public async Task<Result<List<UserEmoteDto>>> GetUserEmotesAsync(Guid userId)
+    public async Task<Result<Dictionary<string, List<UserEmoteDto>>>> GetUserEmotesAsync(Guid userId)
     {
-        var defaultEmotes = await _db.EmotePackages
+        var defaultPackages = await _db.EmotePackages
             .AsNoTracking()
             .Where(p => p.IsDefault)
-            .SelectMany(p => p.Items.Select(i => new UserEmoteDto
+            .Select(p => new
             {
-                Emote = new EmoteDto { Id = i.Emote.Id, Name = i.Emote.Name, ImageUrl = i.Emote.ImageUrl },
-                UnlockedAt = null
-            }))
+                PackageName = p.Name,
+                Emotes = p.Items.Select(i => new UserEmoteDto
+                {
+                    Emote = new EmoteDto { Id = i.Emote.Id, Name = i.Emote.Name, ImageUrl = i.Emote.ImageUrl },
+                    UnlockedAt = null
+                }).ToList()
+            })
             .ToListAsync();
 
-        var unlockedEmotes = await _db.UserPackages
+        var unlockedPackages = await _db.UserPackages
             .AsNoTracking()
             .Where(up => up.UserId == userId)
-            .SelectMany(up => up.Package.Items.Select(i => new UserEmoteDto
+            .Select(up => new
             {
-                Emote = new EmoteDto { Id = i.Emote.Id, Name = i.Emote.Name, ImageUrl = i.Emote.ImageUrl },
-                UnlockedAt = up.UnlockedAt
-            }))
+                PackageName = up.Package.Name,
+                Emotes = up.Package.Items.Select(i => new UserEmoteDto
+                {
+                    Emote = new EmoteDto { Id = i.Emote.Id, Name = i.Emote.Name, ImageUrl = i.Emote.ImageUrl },
+                    UnlockedAt = up.UnlockedAt
+                }).ToList()
+            })
             .ToListAsync();
 
-        var result = defaultEmotes.Concat(unlockedEmotes)
-            .GroupBy(u => u.Emote.Id)
-            .Select(g => g.First())
-            .ToList();
+        var groupedResult = defaultPackages.Concat(unlockedPackages)
+            .GroupBy(p => p.PackageName)
+            .ToDictionary(
+                g => g.Key,
+                g => g.First().Emotes
+            );
 
-        return Result<List<UserEmoteDto>>.Ok(result);
+        return Result<Dictionary<string, List<UserEmoteDto>>>.Ok(groupedResult);
     }
 
     public async Task<Result<List<EmoteDto>>> GetRecentEmotesAsync(Guid userId, int limit)
