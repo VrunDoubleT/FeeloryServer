@@ -3,6 +3,7 @@ using FeeloryBackend.Messaging.RabbitMQ.Messages;
 using FeeloryBackend.Messaging.RabbitMQ.Queues;
 using FeeloryBackend.Messaging.RabbitMQ.Routing;
 using FeeloryBackend.Services.Implementations;
+using FeeloryBackend.Services.Interfaces;
 
 namespace FeeloryBackend.Messaging.RabbitMQ.Consumers;
 
@@ -17,6 +18,13 @@ public class DayShareDeletedConsumer : DayShareFeedConsumerService
     protected override string RoutingKey => RoutingKeys.DayShareDeleted;
     protected override string Action     => DayShareFeedMessage.ActionDeleted;
 
-    protected override Task ProcessAsync(AppDbContext db, DayShareFeedMessage message)
-        => DayShareFeedService.HandleDeletedAsync(db, message);
+    protected override async Task ProcessAsync(
+        IServiceScope scope,
+        DayShareFeedMessage message)
+    {
+        var service = scope.ServiceProvider
+            .GetRequiredService<IDayShareFeedService>();
+       
+        await service.HandleDeletedAsync(message);
+    }
 }

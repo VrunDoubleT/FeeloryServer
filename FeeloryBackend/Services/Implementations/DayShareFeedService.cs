@@ -1,63 +1,70 @@
 using FeeloryBackend.Data;
 using FeeloryBackend.Messaging.RabbitMQ.Messages;
 using FeeloryBackend.Models.Entities;
+using FeeloryBackend.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Task = System.Threading.Tasks.Task;
 
 namespace FeeloryBackend.Services.Implementations;
 
-public static class DayShareFeedService
+public class DayShareFeedService : IDayShareFeedService
 {
-    // Dùng chung cho CREATED và ADDED
-    public static async Task HandleAddFeedsAsync(
-        AppDbContext db,
+    private readonly AppDbContext _db;
+
+    public DayShareFeedService(
+        AppDbContext db)
+    {
+        _db = db;
+    }
+
+    public async Task HandleAddFeedsAsync(
         DayShareFeedMessage message)
     {
         foreach (var viewerId in message.ViewerIds.Distinct())
         {
-            bool exists = await db.DayShareFeeds.AnyAsync(x =>
+            bool exists = await _db.DayShareFeeds.AnyAsync(x =>
                 x.DayShareId == message.DayShareId &&
                 x.ViewerId == viewerId);
 
-            if (exists) continue;
+            if (exists)
+                continue;
 
-            db.DayShareFeeds.Add(new DayShareFeed
+            _db.DayShareFeeds.Add(new DayShareFeed
             {
-                Id         = Guid.NewGuid(),
+                Id = Guid.NewGuid(),
                 DayShareId = message.DayShareId,
-                ViewerId   = viewerId,
-                PostedAt   = DateTime.UtcNow
+                ViewerId = viewerId,
+                PostedAt = DateTime.UtcNow
             });
         }
 
-        await db.SaveChangesAsync();
+        await _db.SaveChangesAsync();
     }
 
-    public static async Task HandleRemovedAsync(
-        AppDbContext db,
+    public async Task HandleRemovedAsync(
         DayShareFeedMessage message)
     {
-        var toRemove = await db.DayShareFeeds
+        var feeds = await _db.DayShareFeeds
             .Where(x =>
                 x.DayShareId == message.DayShareId &&
                 message.ViewerIds.Contains(x.ViewerId))
             .ToListAsync();
 
-        db.DayShareFeeds.RemoveRange(toRemove);
+        _db.DayShareFeeds.RemoveRange(feeds);
 
-        await db.SaveChangesAsync();
+        await _db.SaveChangesAsync();
     }
 
-    public static async Task HandleDeletedAsync(
-        AppDbContext db,
+    public async Task HandleDeletedAsync(
         DayShareFeedMessage message)
     {
-        var feeds = await db.DayShareFeeds
-            .Where(x => x.DayShareId == message.DayShareId)
+        var feeds = await _db.DayShareFeeds
+            .Where(x =>
+                x.DayShareId == message.DayShareId)
             .ToListAsync();
 
-        db.DayShareFeeds.RemoveRange(feeds);
+        _db.DayShareFeeds.RemoveRange(feeds);
 
-        await db.SaveChangesAsync();
+        await _db.SaveChangesAsync();
     }
 }

@@ -3,6 +3,7 @@ using FeeloryBackend.Messaging.RabbitMQ.Messages;
 using FeeloryBackend.Messaging.RabbitMQ.Queues;
 using FeeloryBackend.Messaging.RabbitMQ.Routing;
 using FeeloryBackend.Services.Implementations;
+using FeeloryBackend.Services.Interfaces;
 
 namespace FeeloryBackend.Messaging.RabbitMQ.Consumers;
 
@@ -17,6 +18,14 @@ public class DayShareAddedConsumer : DayShareFeedConsumerService
     protected override string RoutingKey => RoutingKeys.DayShareAdded;
     protected override string Action     => DayShareFeedMessage.ActionAdded;
 
-    protected override Task ProcessAsync(AppDbContext db, DayShareFeedMessage message)
-        => DayShareFeedService.HandleAddFeedsAsync(db, message);
+    protected override async Task ProcessAsync(
+        IServiceScope scope,
+        DayShareFeedMessage message)
+    {
+        var service = scope.ServiceProvider
+            .GetRequiredService<IDayShareFeedService>();
+     
+
+        await service.HandleAddFeedsAsync( message);
+    }
 }

@@ -24,4 +24,11 @@ public interface IDayShareService
         Guid currentUserId,
         string? cursor,
         int pageSize);
+    
+    // Get feed for user
+    Task<Result<CursorPaginationResponse<DayShareFeedItemDto>>> GetUserFeedAsync(
+        Guid currentUserId,
+        Guid targetUserId,
+        string? cursor,
+        int pageSize);
 }

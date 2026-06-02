@@ -21,13 +21,13 @@ public abstract class DayShareFeedConsumerService : BackgroundService
         _scopeFactory = scopeFactory;
     }
 
-    // Mỗi subclass khai báo queue và routing key của riêng nó
     protected abstract string QueueName  { get; }
     protected abstract string RoutingKey { get; }
     protected abstract string Action     { get; }
 
+    // ✅ Sửa nhận IServiceScope thay vì AppDbContext
     protected abstract Task ProcessAsync(
-        AppDbContext db,
+        IServiceScope scope,
         DayShareFeedMessage message);
 
     protected override async Task ExecuteAsync(
@@ -38,9 +38,9 @@ public abstract class DayShareFeedConsumerService : BackgroundService
             try
             {
                 await using var connection = await _factory.CreateConnection();
-
-                await using var channel = await connection.CreateChannelAsync(
+                await using var channel   = await connection.CreateChannelAsync(
                     cancellationToken: stoppingToken);
+
                 await channel.ExchangeDeclareAsync(
                     exchange:   RabbitMQConstants.MainExchange,
                     type:       ExchangeType.Topic,
@@ -48,7 +48,6 @@ public abstract class DayShareFeedConsumerService : BackgroundService
                     autoDelete: false,
                     cancellationToken: stoppingToken);
 
-                // Mỗi consumer dùng queue riêng
                 await channel.QueueDeclareAsync(
                     queue:      QueueName,
                     durable:    true,
@@ -56,7 +55,6 @@ public abstract class DayShareFeedConsumerService : BackgroundService
                     autoDelete: false,
                     cancellationToken: stoppingToken);
 
-                // Bind đúng routing key của nó
                 await channel.QueueBindAsync(
                     queue:      QueueName,
                     exchange:   RabbitMQConstants.MainExchange,
@@ -74,20 +72,22 @@ public abstract class DayShareFeedConsumerService : BackgroundService
 
                         if (message is null)
                         {
-                            await channel.BasicAckAsync(args.DeliveryTag, false, stoppingToken);
+                            await channel.BasicAckAsync(
+                                args.DeliveryTag, false, stoppingToken);
                             return;
                         }
 
+                        // ✅ Pass scope vào ProcessAsync
                         using var scope = _scopeFactory.CreateScope();
-                        var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+                        await ProcessAsync(scope, message);
 
-                        await ProcessAsync(db, message);
-
-                        await channel.BasicAckAsync(args.DeliveryTag, false, stoppingToken);
+                        await channel.BasicAckAsync(
+                            args.DeliveryTag, false, stoppingToken);
                     }
                     catch
                     {
-                        await channel.BasicNackAsync(args.DeliveryTag, false, true, stoppingToken);
+                        await channel.BasicNackAsync(
+                            args.DeliveryTag, false, true, stoppingToken);
                     }
                 };
 

@@ -85,4 +85,19 @@ public class DaySharesController : ControllerBase
             ? Ok(result.Data)
             : BadRequest(new ApiErrorResponse(result.Error!));
     }
+    
+    // GET /api/day-shares/user/{userId}
+    [HttpGet("user/{userId:guid}")]
+    public async Task<IActionResult> GetUserFeed(
+        Guid userId,
+        [FromQuery] string? cursor   = null,
+        [FromQuery] int     pageSize = 10)
+    {
+        var result = await _dayShareService
+            .GetUserFeedAsync(CurrentUserId, userId, cursor, pageSize);
+
+        return result.IsSuccess
+            ? Ok(result.Data)
+            : BadRequest(new ApiErrorResponse(result.Error!));
+    }
 }
