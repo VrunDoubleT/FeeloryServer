@@ -35,7 +35,7 @@ public class PostsController : ControllerBase
         var result = await _postService.UpdateAsync(CurrentUserId, id, request);
         
         return result.IsSuccess 
-            ? Ok( new ApiResponse<object>( id, "Post updated successfully")) 
+            ? Ok( new ApiResponse<object>( result.Data!, "Post updated successfully")) 
             : BadRequest( new ApiErrorResponse(result.Error!));
     }
 
@@ -61,27 +61,34 @@ public class PostsController : ControllerBase
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id)
     {
-        try
-        {
-            var result = await _postService.GetByIdAsync(CurrentUserId, id);
-            if (result == null)
-            {
-                return NotFound(new ApiErrorResponse("Post not found"));
-            }
-            return Ok(new ApiResponse<object>(result, "Get post successfully"));
-        }
-        catch (UnauthorizedAccessException)
-        {
-            return StatusCode(403, new ApiErrorResponse("Forbidden"));
-        }
+        var result = await _postService.GetByIdAsync(CurrentUserId, id);
+
+        if (result.IsSuccess)
+            return Ok(new ApiResponse<PostDetailDto>(result.Data!, "Get post successfully"));
+
+        if (result.Error == "You do not have permission to get this post")
+            return StatusCode(403, new ApiErrorResponse(result.Error));
+
+        return BadRequest(new ApiErrorResponse(result.Error!));
+    }
+    
+    // Get my post feed
+    [HttpGet("feed")]
+    public async Task<IActionResult> GetMyFeed([FromQuery] GetFriendFeedRequestDto request)
+    {
+        var result = await _postService.GetMyFeedAsync(CurrentUserId, request);
+        return Ok(new ApiResponse<object>(result, "Get feed successfully")
+        );
     }
     
     // Get friend post feed
-    [HttpGet("feed")]
-    public async Task<IActionResult> GetFriendFeed([FromQuery] GetFriendFeedRequestDto request)
+    [HttpGet("feed/{id:guid}")]
+    public async Task<IActionResult> GetFriendFeed(Guid id, [FromQuery] GetFriendFeedRequestDto request)
     {
-        var result = await _postService.GetFriendFeedAsync(CurrentUserId, request);
-        return Ok(new ApiResponse<object>(result, "Get feed successfully")
-        );
+        var result = await _postService.GetFriendFeedAsync(CurrentUserId, id, request);
+        
+        return result.IsSuccess
+            ?Ok(new ApiResponse<object>(result, "Get feed successfully"))
+            : BadRequest( new ApiErrorResponse(result.Error!));
     }
 }

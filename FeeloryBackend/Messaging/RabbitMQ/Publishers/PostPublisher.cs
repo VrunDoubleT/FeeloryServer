@@ -12,21 +12,16 @@ public class PostPublisher
         _eventBus = eventBus;
     }
 
-    // CREATE POST
-    public async Task PublishPostAsync(PostCreatedMessage message)
+    public async Task PublishPostAsync(PostMessage message)
     {
-        await _eventBus.PublishAsync(RoutingKeys.PostCreated, message);
-    }
-    
-    // UPDATE PERMISSION
-    public async Task PublishPermissionChangedAsync(PostPermissionChangedMessage message)
-    {
-        await _eventBus.PublishAsync(RoutingKeys.PostPermissionChanged, message);
-    }
-    
-    // DELETE POST
-    public async Task PublishPostDeletedAsync(PostDeletedMessage message)
-    {
-        await _eventBus.PublishAsync(RoutingKeys.PostDeleted, message);
+        var routingKey = message.Action switch
+        {
+            PostMessage.ActionCreated => RoutingKeys.PostCreated,
+            PostMessage.ActionAdded   => RoutingKeys.PostPermissionAdded,
+            PostMessage.ActionRemoved => RoutingKeys.PostPermissionRemoved,
+            PostMessage.ActionDeleted => RoutingKeys.PostDeleted,
+            _ => throw new ArgumentException($"Unknown action: {message.Action}")
+        };
+        await _eventBus.PublishAsync(routingKey, message);
     }
 }

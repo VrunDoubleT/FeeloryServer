@@ -5,7 +5,7 @@ namespace FeeloryBackend.Models.DTOs.Post;
 
 public class UpdatePostRequestDto : IValidatableObject
 {
-    public string? Description { get; set; }
+    public string Description { get; set; }
     public string Privacy { get; set; } = null!;
     public List<Guid>? AllowedUserIds { get; set; }
     public IEnumerable<ValidationResult> Validate(ValidationContext context)
@@ -31,10 +31,10 @@ public class UpdatePostRequestDto : IValidatableObject
             yield return new ValidationResult("Privacy is invalid", [nameof(Privacy)]);
         }
 
-        // Validate AllowedUserIds when privacy = CUSTOM
+        // Validate AllowedUserIds only when privacy = CUSTOM
         if (Privacy == PostPrivacyConstants.Custom)
         {
-            if (AllowedUserIds == null || AllowedUserIds.Count == 0)
+            if (AllowedUserIds == null || !AllowedUserIds.Any())
             {
                 yield return new ValidationResult("AllowedUserIds is required", [nameof(AllowedUserIds)]);
             }
@@ -45,7 +45,7 @@ public class UpdatePostRequestDto : IValidatableObject
         }
         else
         {
-            if (AllowedUserIds != null && AllowedUserIds.Count > 0)
+            if (AllowedUserIds != null && AllowedUserIds.Any())
             {
                 yield return new ValidationResult("AllowedUserIds is only allowed when privacy is CUSTOM", [nameof(AllowedUserIds)]);
             }

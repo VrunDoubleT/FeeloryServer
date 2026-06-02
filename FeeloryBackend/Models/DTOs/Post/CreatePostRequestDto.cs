@@ -6,7 +6,7 @@ namespace FeeloryBackend.Models.DTOs.Post;
 public class CreatePostRequestDto : IValidatableObject
 {
     public IFormFile Image { get; set; } = null!;
-    public string? Description { get; set; }
+    public string Description { get; set; }
     public Guid MoodEmoteId { get; set; }
     public string Privacy { get; set; } = null!;
     public List<Guid>? AllowedUserIds { get; set; }
@@ -59,7 +59,7 @@ public class CreatePostRequestDto : IValidatableObject
         // Validate AllowedUserIds only when privacy = CUSTOM
         if (Privacy == PostPrivacyConstants.Custom)
         {
-            if (AllowedUserIds == null || AllowedUserIds.Count == 0)
+            if (AllowedUserIds == null || !AllowedUserIds.Any())
             {
                 yield return new ValidationResult("AllowedUserIds is required", [nameof(AllowedUserIds)]);
             }
@@ -70,7 +70,7 @@ public class CreatePostRequestDto : IValidatableObject
         }
         else
         {
-            if (AllowedUserIds != null && AllowedUserIds.Count > 0)
+            if (AllowedUserIds != null && AllowedUserIds.Any())
             {
                 yield return new ValidationResult("AllowedUserIds is only allowed when privacy is CUSTOM", [nameof(AllowedUserIds)]);
             }

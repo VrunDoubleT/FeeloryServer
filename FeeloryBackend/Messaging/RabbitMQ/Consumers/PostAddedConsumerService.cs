@@ -15,20 +15,20 @@ using Task = System.Threading.Tasks.Task;
 
 namespace FeeloryBackend.Messaging.RabbitMQ.Consumers;
 
-public class PostCreatedConsumerService : PostConsumerService
+public class PostAddedConsumerService : PostConsumerService
 {
     private readonly IPostFeedService  _postFeedService;
 
-    public PostCreatedConsumerService(IRabbitMQConnectionFactory factory, IServiceScopeFactory scopeFactory,
-        IPostFeedService postFeedService)
+    public PostAddedConsumerService(IRabbitMQConnectionFactory factory, IServiceScopeFactory scopeFactory, IPostFeedService postFeedService)
         : base(factory, scopeFactory)
     {
         _postFeedService = postFeedService;
     }
 
-    protected override string QueueName => QueueNames.PostCreated;
-    protected override string RoutingKey => RoutingKeys.PostCreated;
-    protected override string Action => PostMessage.ActionCreated;
+    protected override string QueueName => QueueNames.PostPermissionAdded;
+    protected override string RoutingKey => RoutingKeys.PostPermissionAdded;
+    protected override string Action => PostMessage.ActionAdded;
+
     protected override Task ProcessAsync(AppDbContext db, PostMessage message)
         => _postFeedService.HandleAddFeedsAsync(db, message);
 }

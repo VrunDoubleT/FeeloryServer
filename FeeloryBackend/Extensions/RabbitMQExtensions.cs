@@ -1,3 +1,5 @@
+using FeeloryBackend.Services.Interfaces;
+
 namespace FeeloryBackend.Extensions;
 
 using FeeloryBackend.Messaging.RabbitMQ;
@@ -17,6 +19,7 @@ public static class RabbitMQExtensions
         // Core infrastructure
         services.AddSingleton<IRabbitMQConnectionFactory, RabbitMQConnectionFactory>();
         services.AddSingleton<IEventBus, RabbitMQEventBus>();
+        services.AddSingleton<IPostFeedService, PostFeedService>();
 
         // Publishers
         services.AddSingleton<EmailPublisher>();
@@ -25,7 +28,8 @@ public static class RabbitMQExtensions
         // Consumers (Background Services)
         services.AddHostedService<EmailConsumerService>();
         services.AddHostedService<PostCreatedConsumerService>();
-        services.AddHostedService<PostPermissionConsumerService>();
+        services.AddHostedService<PostAddedConsumerService>();
+        services.AddHostedService<PostRemovedConsumerService>();
         services.AddHostedService<PostDeletedConsumerService>();
 
         return services;

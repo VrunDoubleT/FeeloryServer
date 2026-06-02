@@ -12,5 +12,6 @@ public class PostDto
     public string Privacy { get; set; } = null!;
     public EmoteDto MoodEmote { get; set; } = null!;
     public DateTime CreatedAt { get; set; }
+    public DateTime? UpdatedAt { get; set; }
     public int ReactionCount { get; set; }
 }
