@@ -1,4 +1,5 @@
 using System.Security.Claims;
+using FeeloryBackend.Models.DTOs.Commons;
 using FeeloryBackend.Models.DTOs.Post;
 using FeeloryBackend.Responses;
 using FeeloryBackend.Services.Interfaces;
@@ -28,7 +29,7 @@ public class PostsController : ControllerBase
             : BadRequest( new ApiErrorResponse(result.Error!));
     }
 
-    // Update existing post
+    // Update post
     [HttpPut("{id:guid}")]
     public async Task<IActionResult> Update(Guid id, [FromBody] UpdatePostRequestDto request)
     {
@@ -49,15 +50,15 @@ public class PostsController : ControllerBase
             : BadRequest( new ApiErrorResponse(result.Error!));
     }
 
-    // Get posts of a user
+    // Get posts of current user
     [HttpGet("me")]
     public async Task<IActionResult> GetMyPosts([FromQuery] GetMyPostsRequestDto request)
     {
         var result = await _postService.GetMyPostsAsync(CurrentUserId, request);
-        return Ok(new ApiResponse<object>(result, "Get my posts successfully"));
+        return Ok(new ApiResponse<CursorPaginationResponse<MyPostItemDto>>(result.Data, "Get my posts successfully"));
     }
     
-    // Get posts by ID
+    // Get posts by id
     [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id)
     {
@@ -74,21 +75,21 @@ public class PostsController : ControllerBase
     
     // Get my post feed
     [HttpGet("feed")]
-    public async Task<IActionResult> GetMyFeed([FromQuery] GetFriendFeedRequestDto request)
+    public async Task<IActionResult> GetMyFeed([FromQuery] CursorPaginationRequest request)
     {
         var result = await _postService.GetMyFeedAsync(CurrentUserId, request);
-        return Ok(new ApiResponse<object>(result, "Get feed successfully")
+        return Ok(new ApiResponse<CursorPaginationResponse<PostFeedItemDto>>(result.Data, "Get feed successfully")
         );
     }
     
     // Get friend post feed
     [HttpGet("feed/{id:guid}")]
-    public async Task<IActionResult> GetFriendFeed(Guid id, [FromQuery] GetFriendFeedRequestDto request)
+    public async Task<IActionResult> GetFriendFeed(Guid id, [FromQuery] CursorPaginationRequest request)
     {
         var result = await _postService.GetFriendFeedAsync(CurrentUserId, id, request);
         
         return result.IsSuccess
-            ?Ok(new ApiResponse<object>(result, "Get feed successfully"))
+            ?Ok(new ApiResponse<CursorPaginationResponse<PostFeedItemDto>>(result.Data, "Get feed successfully"))
             : BadRequest( new ApiErrorResponse(result.Error!));
     }
 }

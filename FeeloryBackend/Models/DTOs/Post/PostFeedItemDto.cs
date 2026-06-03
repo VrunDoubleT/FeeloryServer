@@ -2,7 +2,7 @@
 
 namespace FeeloryBackend.Models.DTOs.Post;
 
-public class FriendFeedItemDto
+public class PostFeedItemDto
 {
     public PostDto Post { get; set; } = null!;
     public UserDto Owner { get; set; } = null!;

@@ -1,14 +1,13 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using FeeloryBackend.Constants;
+using FeeloryBackend.Models.DTOs.Commons;
 
 namespace FeeloryBackend.Models.DTOs.Post;
 
-public class GetMyPostsRequestDto : IValidatableObject
+public class GetMyPostsRequestDto : CursorPaginationRequest, IValidatableObject
 {
     public DateTime? Date { get; set; }
     public string? Privacy { get; set; }
-    public string? Cursor { get; set; }
-    public int Limit { get; set; } = 10;
     public IEnumerable<ValidationResult> Validate(ValidationContext context)
     {
         // Validate Privacy
@@ -24,10 +23,6 @@ public class GetMyPostsRequestDto : IValidatableObject
             if (!validPrivacy.Contains(Privacy))
                 yield return new ValidationResult("Privacy is invalid", [nameof(Privacy)]);
         }
-
-        // Validate Limit
-        if (Limit <= 0)
-            yield return new ValidationResult("Limit must be greater than 0", [nameof(Limit)]);
         
         // Validate Date
         if (Date.HasValue && Date.Value > DateTime.UtcNow)

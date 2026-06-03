@@ -8,19 +8,16 @@ namespace FeeloryBackend.Messaging.RabbitMQ.Consumers;
 
 public class PostRemovedConsumerService : PostConsumerService
 {
-    private readonly IPostFeedService  _postFeedService;
-
-    public PostRemovedConsumerService(IRabbitMQConnectionFactory factory, IServiceScopeFactory scopeFactory,
-        IPostFeedService postFeedService)
-        : base(factory, scopeFactory)
-    {
-        _postFeedService = postFeedService;
-    }
+    public PostRemovedConsumerService(IRabbitMQConnectionFactory factory, IServiceScopeFactory scopeFactory)
+        : base(factory, scopeFactory) { }
 
     protected override string QueueName => QueueNames.PostPermissionRemoved;
     protected override string RoutingKey => RoutingKeys.PostPermissionRemoved;
-    protected override string Action     => PostMessage.ActionRemoved;
+    protected override string Action => PostMessage.ActionRemoved;
 
-    protected override Task ProcessAsync(AppDbContext db, PostMessage message)
-        => _postFeedService.HandleRemoveFeedsAsync(db, message);
+    protected override async Task ProcessAsync(IServiceScope scope, PostMessage message)
+    {
+        var service = scope.ServiceProvider.GetRequiredService<IPostFeedService>();
+        await service.HandleRemoveFeedsAsync(message);
+    }
 }

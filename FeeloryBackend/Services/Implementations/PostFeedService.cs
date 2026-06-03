@@ -7,10 +7,17 @@ using Task = System.Threading.Tasks.Task;
 
 public class PostFeedService : IPostFeedService
 {
-    // CREATE POST & ADD NEW VIEWERS
-    public async Task HandleAddFeedsAsync(AppDbContext db, PostMessage message)
+    private readonly AppDbContext _db;
+    
+    public PostFeedService(AppDbContext db)
     {
-        var post = await db.Posts.FirstOrDefaultAsync(x => x.Id == message.PostId);
+        _db = db;
+    }
+    
+    // CREATE POST & ADD NEW VIEWERS
+    public async Task HandleAddFeedsAsync(PostMessage message)
+    {
+        var post = await _db.Posts.FirstOrDefaultAsync(x => x.Id == message.PostId);
 
         if (post == null) return;
 
@@ -23,35 +30,35 @@ public class PostFeedService : IPostFeedService
                 PostedAt = post.CreatedAt
             });
 
-        await db.PostFeeds.AddRangeAsync(feeds);
-        await db.SaveChangesAsync();
+        await _db.PostFeeds.AddRangeAsync(feeds);
+        await _db.SaveChangesAsync();
     }
 
     // REMOVE VIEWERS
-    public async Task HandleRemoveFeedsAsync(AppDbContext db, PostMessage message)
+    public async Task HandleRemoveFeedsAsync(PostMessage message)
     {
-        var feeds = await db.PostFeeds
+        var feeds = await _db.PostFeeds
             .Where(x => x.PostId == message.PostId && message.ViewerIds.Contains(x.ViewerId))
             .ToListAsync();
         
         if (feeds.Count == 0) return;
         
-        db.PostFeeds.RemoveRange(feeds);
+        _db.PostFeeds.RemoveRange(feeds);
 
-        await db.SaveChangesAsync();
+        await _db.SaveChangesAsync();
     }
 
     // DELETE POST
-    public async Task HandleDeletePostAsync(AppDbContext db, PostMessage message)
+    public async Task HandleDeletePostAsync(PostMessage message)
     {
-        var feeds = await db.PostFeeds
+        var feeds = await _db.PostFeeds
             .Where(x => x.PostId == message.PostId)
             .ToListAsync();
 
         if (feeds.Count == 0) return;
         
-        db.PostFeeds.RemoveRange(feeds);
+        _db.PostFeeds.RemoveRange(feeds);
 
-        await db.SaveChangesAsync();
+        await _db.SaveChangesAsync();
     }
 }

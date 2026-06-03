@@ -8,9 +8,11 @@ using FeeloryBackend.Messaging.RabbitMQ.Messages;
 using FeeloryBackend.Messaging.RabbitMQ.Publishers;
 using FeeloryBackend.Messaging.RabbitMQ.Queues;
 using FeeloryBackend.Models.DTOs.Auth;
+using FeeloryBackend.Models.DTOs.Commons;
 using FeeloryBackend.Models.DTOs.Emote;
 using FeeloryBackend.Models.DTOs.Post;
 using FeeloryBackend.Models.Entities;
+using FeeloryBackend.Responses;
 using FeeloryBackend.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using Task = System.Threading.Tasks.Task;
@@ -61,12 +63,12 @@ public class PostService : IPostService
 
                 if (selectedUsers.Contains(userId))
                     return Result<PostDto>.Fail("Do not include yourself in AllowedUserIds");
-                
+
                 var existingUsers = await _db.Users.CountAsync(x => selectedUsers.Contains(x.Id));
 
                 if (existingUsers != selectedUsers.Count)
                     return Result<PostDto>.Fail("Some selected users do not exist");
-                
+
                 foreach (var viewerId in selectedUsers)
                 {
                     bool areFriends = await _db.Friends.AreFriendsAsync(userId, viewerId);
@@ -74,10 +76,11 @@ public class PostService : IPostService
                     if (!areFriends)
                         return Result<PostDto>.Fail("Some selected users are not your friends");
                 }
+
                 viewerIds = selectedUsers;
                 break;
         }
-        
+
         // Add owner
         viewerIds.Add(userId);
 
@@ -114,12 +117,6 @@ public class PostService : IPostService
         var response = new PostDto
         {
             Id = post.Id,
-            User = new UserDto
-            {
-                Id = post.User.Id,
-                Username = post.User.Username,
-                AvatarUrl = post.User.AvatarUrl
-            },
             ImageUrl = post.ImageUrl,
             Description = post.Description,
             Privacy = post.Privacy,
@@ -142,7 +139,7 @@ public class PostService : IPostService
         var post = await _db.Posts
             .FirstOrDefaultAsync(x => x.Id == postId && x.UserId == userId);
 
-        if (post == null) 
+        if (post == null)
             return Result<PostDto>.Fail("Post not found");
 
         // Current viewers
@@ -150,8 +147,8 @@ public class PostService : IPostService
                 .Where(x => x.PostId == postId)
                 .Select(x => x.ViewerId)
                 .ToListAsync()
-        ).ToHashSet();
-        
+            ).ToHashSet();
+
         // New viewers
         HashSet<Guid> newViewerIds = [];
 
@@ -175,14 +172,14 @@ public class PostService : IPostService
 
                 if (selectedUsers.Contains(userId))
                     return Result<PostDto>.Fail("Do not include yourself in AllowedUserIds");
-                
+
                 // Check user exists
                 var existingUsers = await _db.Users
                     .CountAsync(x => selectedUsers.Contains(x.Id));
 
                 if (existingUsers != selectedUsers.Count)
                     return Result<PostDto>.Fail("Some selected users do not exist");
-                
+
                 // Check friendship
                 foreach (var viewerId in selectedUsers)
                 {
@@ -191,6 +188,7 @@ public class PostService : IPostService
                     if (!areFriends)
                         return Result<PostDto>.Fail("Some selected users are not your friends");
                 }
+
                 newViewerIds = selectedUsers.ToHashSet();
                 break;
         }
@@ -201,13 +199,6 @@ public class PostService : IPostService
         // Calculate diff
         var removedUsers = oldViewerIds.Except(newViewerIds).ToList();
         var addedUsers = newViewerIds.Except(oldViewerIds).ToList();
-        
-        Console.WriteLine($"[UPDATE POST] PostId: {postId}");
-        Console.WriteLine($"Old viewers: {oldViewerIds.Count}");
-        Console.WriteLine($"New viewers: {newViewerIds.Count}");
-        Console.WriteLine($"Added: {addedUsers.Count}");
-        Console.WriteLine($"Removed: {removedUsers.Count}");
-        Console.WriteLine($"RemovedIds: {string.Join(",", removedUsers)}");
 
         // Update post
         post.Description = request.Description.Trim();
@@ -227,11 +218,9 @@ public class PostService : IPostService
                     ViewerIds = addedUsers
                 });
         }
+
         if (removedUsers.Any())
         {
-            Console.WriteLine($"[PUBLISH REMOVE] PostId: {post.Id}");
-            Console.WriteLine($"Removing viewers: {string.Join(",", removedUsers)}");
-            
             await _postPublisher.PublishPostAsync(
                 new PostMessage
                 {
@@ -240,19 +229,13 @@ public class PostService : IPostService
                     ViewerIds = removedUsers
                 });
         }
-        
+
         await _db.Entry(post).Reference(x => x.User).LoadAsync();
         await _db.Entry(post).Reference(x => x.MoodEmote).LoadAsync();
 
         var response = new PostDto
         {
             Id = post.Id,
-            User = new UserDto
-            {
-                Id = post.User.Id,
-                Username = post.User.Username,
-                AvatarUrl = post.User.AvatarUrl
-            },
             ImageUrl = post.ImageUrl,
             Description = post.Description,
             Privacy = post.Privacy,
@@ -265,7 +248,6 @@ public class PostService : IPostService
             CreatedAt = post.CreatedAt,
             UpdatedAt = post.UpdatedAt,
         };
-
         return Result<PostDto>.Ok(response);
     }
 
@@ -273,7 +255,7 @@ public class PostService : IPostService
     public async Task<Result> DeleteAsync(Guid userId, Guid postId)
     {
         var post = await _db.Posts
-                .FirstOrDefaultAsync(p => p.Id == postId && p.UserId == userId && p.DeletedAt == null);
+            .FirstOrDefaultAsync(p => p.Id == postId && p.UserId == userId && p.DeletedAt == null);
 
         if (post == null)
             return Result.Fail("Post not found");
@@ -294,8 +276,8 @@ public class PostService : IPostService
         return Result.Ok();
     }
 
-    // GET POSTS BY USER
-    public async Task<GetMyPostsResponseDto> GetMyPostsAsync(Guid userId, GetMyPostsRequestDto request)
+    // GET POSTS OF CURRENT USER
+    public async Task<Result<CursorPaginationResponse<MyPostItemDto>>> GetMyPostsAsync(Guid userId, GetMyPostsRequestDto request)
     {
         var query = _db.Posts.AsNoTracking()
             .Where(x => x.UserId == userId && x.DeletedAt == null);
@@ -306,23 +288,30 @@ public class PostService : IPostService
             var startDate = request.Date.Value.Date;
             var endDate = startDate.AddDays(1);
 
-            query = query.Where(x => x.CreatedAt >= startDate && x.CreatedAt < endDate);
+            query = query.Where(x =>
+                x.CreatedAt >= startDate &&
+                x.CreatedAt < endDate);
         }
 
         // Filter privacy
         if (!string.IsNullOrWhiteSpace(request.Privacy))
-            query = query.Where(x => x.Privacy == request.Privacy.Trim());
-        
+        {
+            query = query.Where(x =>
+                x.Privacy == request.Privacy.Trim());
+        }
+
         // Total records after filtering
         var total = await query.CountAsync();
-        
+
         // Cursor pagination
         if (!string.IsNullOrWhiteSpace(request.Cursor))
         {
             var (createdAt, id) = CursorHelper.Decode(request.Cursor);
+
             query = query.Where(x =>
                 x.CreatedAt < createdAt ||
-                (x.CreatedAt == createdAt && x.Id != id));
+                (x.CreatedAt == createdAt &&
+                 x.Id.CompareTo(id) < 0));
         }
 
         // Sort
@@ -332,7 +321,7 @@ public class PostService : IPostService
 
         // Take limit + 1
         var posts = await query
-            .Take(request.Limit + 1)
+            .Take(request.PageSize + 1)
             .Select(x => new MyPostItemDto
             {
                 Id = x.Id,
@@ -344,92 +333,91 @@ public class PostService : IPostService
                 CreatedAt = x.CreatedAt
             }).ToListAsync();
 
+        bool hasNextPage = posts.Count > request.PageSize;
+
+        posts = posts.Take(request.PageSize).ToList();
+
         // Next cursor
         string? nextCursor = null;
 
-        if (posts.Count > request.Limit)
+        if (hasNextPage)
         {
-            var lastVisibleItem = posts[request.Limit - 1];
-            nextCursor = CursorHelper.Encode(lastVisibleItem.CreatedAt, lastVisibleItem.Id);
-            posts.RemoveAt(request.Limit);
+            var lastItem = posts.Last();
+            nextCursor = CursorHelper.Encode(lastItem.CreatedAt, lastItem.Id);
         }
 
-        // Return post
-        return new GetMyPostsResponseDto
-        {
-            Items = posts,
-            Total = total,
-            NextCursor = nextCursor
-        };
+        var response = new CursorPaginationResponse<MyPostItemDto>(
+            posts,
+            nextCursor,
+            hasNextPage
+        );
+
+        return Result<CursorPaginationResponse<MyPostItemDto>>.Ok(response);
     }
-    
+
     // GET POST BY ID
     public async Task<Result<PostDetailDto>> GetByIdAsync(Guid currentUserId, Guid postId)
     {
+        // Check permission
+        var postFeedAccess = await _db.PostFeeds
+            .AsNoTracking()
+            .AnyAsync(x =>
+                x.PostId == postId &&
+                x.ViewerId == currentUserId);
+        
         // Get post
-        var post = await _db.Posts.AsNoTracking()
-            .Where(x => x.Id == postId && x.DeletedAt == null)
+        var post = await _db.Posts
+            .AsNoTracking()
+            .Where(x =>
+                x.Id == postId &&
+                x.DeletedAt == null)
             .Select(x => new
             {
-                x.Id,
-                x.ImageUrl,
-                x.Description,
-                x.Privacy,
-                MoodEmote = x.MoodEmote != null ? x.MoodEmote.Name : null,
-                x.CreatedAt,
                 x.UserId,
-                Owner = new UserDto
+                Post = new PostDetailDto
                 {
-                    Id = x.User.Id,
-                    DisplayName = x.User.DisplayName,
-                    AvatarUrl = x.User.AvatarUrl
-                },
-                Reactions = x.Reactions.Select(r => new PostReactionDto
-                {
-                    UserId = r.UserId,
-                    DisplayName = r.User.DisplayName,
-                    Reaction = r.Emote != null ? r.Emote.Name : null
-                }).ToList()
+                    Id = x.Id,
+                    ImageUrl = x.ImageUrl,
+                    Description = x.Description,
+                    Privacy = x.Privacy,
+                    MoodEmote = x.MoodEmote.Name,
+                    CreatedAt = x.CreatedAt,
+                    Owner = new UserDto
+                    {
+                        Id = x.User.Id,
+                        DisplayName = x.User.DisplayName,
+                        AvatarUrl = x.User.AvatarUrl
+                    },
+                    Reactions = x.Reactions
+                        .Select(r => new PostReactionDto
+                        {
+                            UserId = r.UserId,
+                            DisplayName = r.User.DisplayName,
+                            ReactionName = r.Emote.Name,
+                            Icon = r.Emote.ImageUrl
+                        }).ToList()
+                }
             }).FirstOrDefaultAsync();
 
         if (post == null)
             return Result<PostDetailDto>.Fail("Post not found");
 
-        // Check permission (owner OR in feed)
         var isOwner = post.UserId == currentUserId;
 
-        var inFeed = await _db.PostFeeds
-            .AnyAsync(x => x.PostId == postId && x.ViewerId == currentUserId);
-
-        if (!isOwner && !inFeed)
+        if (!isOwner && !postFeedAccess)
             return Result<PostDetailDto>.Fail("You do not have permission to get this post");
-
-        // Return post
-        var result = new PostDetailDto
-        {
-            Id = post.Id,
-            ImageUrl = post.ImageUrl,
-            Description = post.Description,
-            MoodEmote = post.MoodEmote,
-            Privacy = post.Privacy,
-            Owner = post.Owner,
-            Reactions = post.Reactions,
-            CreatedAt = post.CreatedAt
-        };
-        return Result<PostDetailDto>.Ok(result);    
+        
+        return Result<PostDetailDto>.Ok(post.Post);
     }
-    
+
     // GET MY POST FEED 
-    public async Task<GetFriendFeedResponseDto> GetMyFeedAsync(Guid currentUserId, GetFriendFeedRequestDto request)
+    public async Task<Result<CursorPaginationResponse<PostFeedItemDto>>> GetMyFeedAsync(Guid currentUserId, CursorPaginationRequest request)
     {
         var query = _db.PostFeeds
-            .Include(x => x.Post)
-                .ThenInclude(x => x.User)
-            .Include(x => x.Post)
-                .ThenInclude(x => x.MoodEmote)
-            .Include(x => x.Post)
-                .ThenInclude(x => x.Reactions)
+            .AsNoTracking()
             .Where(x => x.ViewerId == currentUserId && x.Post.DeletedAt == null)
+            .OrderByDescending(x => x.Post.CreatedAt)
+            .ThenByDescending(x => x.Post.Id)
             .AsQueryable();
 
         // Cursor pagination
@@ -437,81 +425,81 @@ public class PostService : IPostService
         {
             var (createdAt, id) = CursorHelper.Decode(request.Cursor);
 
-            query = query.Where(x => 
+            query = query.Where(x =>
                 x.Post.CreatedAt < createdAt ||
-                (x.Post.CreatedAt == createdAt && 
+                (x.Post.CreatedAt == createdAt &&
                  x.Post.Id.CompareTo(id) < 0));
         }
-
-        // Sort
-        query = query.OrderByDescending(x => x.Post.CreatedAt).ThenByDescending(x => x.Post.Id);
-
-        // Take limit + 1
-        var feeds = await query.Take(request.Limit + 1).ToListAsync();
+        
+        // Get extra item
+        var feeds = await query
+            .Select(x => new PostFeedItemDto
+            {
+                Post = new PostDto
+                {
+                    Id = x.Post.Id,
+                    ImageUrl = x.Post.ImageUrl,
+                    Description = x.Post.Description,
+                    Privacy = x.Post.Privacy,
+                    CreatedAt = x.Post.CreatedAt,
+                    MoodEmote = new EmoteDto
+                        {
+                            Id = x.Post.MoodEmote.Id,
+                            Name = x.Post.MoodEmote.Name,
+                            ImageUrl = x.Post.MoodEmote.ImageUrl
+                        }
+                },
+                Owner = new UserDto
+                {
+                    Id = x.Post.User.Id,
+                    DisplayName = x.Post.User.DisplayName,
+                    AvatarUrl = x.Post.User.AvatarUrl
+                }
+            }).Take(request.PageSize + 1).ToListAsync();
+        
+        bool hasNextPage = feeds.Count > request.PageSize;
+        feeds = feeds.Take(request.PageSize).ToList();
 
         // Next cursor
         string? nextCursor = null;
 
-        if (feeds.Count > request.Limit)
+        if (hasNextPage)
         {
-            var lastVisibleItem = feeds[request.Limit - 1];
-            nextCursor = CursorHelper.Encode(lastVisibleItem.Post.CreatedAt, lastVisibleItem.Post.Id);
-            feeds.RemoveAt(request.Limit);
+            var lastItem = feeds.Last();
+
+            nextCursor = CursorHelper.Encode(
+                lastItem.Post.CreatedAt,
+                lastItem.Post.Id
+            );
         }
 
-        // Map DTO
-        var items = feeds.Select(x => new FriendFeedItemDto
-        {
-            Post = new PostDto
-            {
-                Id = x.Post.Id,
-                ImageUrl = x.Post.ImageUrl,
-                Description = x.Post.Description,
-                Privacy = x.Post.Privacy,
-                CreatedAt = x.Post.CreatedAt,
-                ReactionCount = x.Post.Reactions.Count,
-                MoodEmote = new EmoteDto
-                {
-                    Id = x.Post.MoodEmote.Id,
-                    Name = x.Post.MoodEmote.Name,
-                    ImageUrl = x.Post.MoodEmote.ImageUrl
-                },
-            },
+        var response = new CursorPaginationResponse<PostFeedItemDto>(
+                feeds,
+                nextCursor,
+                hasNextPage
+            );
 
-            Owner = new UserDto
-            {
-                Id = x.Post.User.Id,
-                DisplayName = x.Post.User.DisplayName,
-                AvatarUrl = x.Post.User.AvatarUrl
-            }
-        }).ToList();
-
-        return new GetFriendFeedResponseDto
-        {
-            Items = items,
-            NextCursor = nextCursor
-        };
+        return Result<CursorPaginationResponse<PostFeedItemDto>>.Ok(response);
     }
-    
+
     // GET FRIEND POST FEED
-    public async Task<Result<GetFriendFeedResponseDto>> GetFriendFeedAsync(Guid currentUserId, Guid profileUserId, GetFriendFeedRequestDto request)
+    public async Task<Result<CursorPaginationResponse<PostFeedItemDto>>> GetFriendFeedAsync(
+        Guid currentUserId, Guid profileUserId, CursorPaginationRequest request)
     {
+        // Check if current user access owner posts
+        if (currentUserId == profileUserId)
+            return Result<CursorPaginationResponse<PostFeedItemDto>>.Fail("You can not access your posts");
+
         var query = _db.PostFeeds
-            .Include(x => x.Post)
-                .ThenInclude(x => x.User)
-            .Include(x => x.Post)
-                .ThenInclude(x => x.MoodEmote)
-            .Include(x => x.Post)
-                .ThenInclude(x => x.Reactions)
+            .AsNoTracking()
             .Where(x =>
                 x.ViewerId == currentUserId &&
                 x.Post.UserId == profileUserId &&
-                x.Post.DeletedAt == null);
+                x.Post.DeletedAt == null)
+            .OrderByDescending(x => x.Post.CreatedAt)
+            .ThenByDescending(x => x.Post.Id)
+            .AsQueryable();
 
-        // Check if current user access owner posts
-        if (currentUserId == profileUserId)
-            return Result<GetFriendFeedResponseDto>.Fail("You can not access your posts");
-        
         // Cursor pagination
         if (!string.IsNullOrWhiteSpace(request.Cursor))
         {
@@ -520,59 +508,57 @@ public class PostService : IPostService
             query = query.Where(x =>
                 x.Post.CreatedAt < createdAt ||
                 (x.Post.CreatedAt == createdAt &&
-                x.Post.Id.CompareTo(postId) < 0));
+                 x.Post.Id.CompareTo(postId) < 0));
         }
 
-        // Sort newest first
-        query = query
-            .OrderByDescending(x => x.Post.CreatedAt)
-            .ThenByDescending(x => x.Post.Id);
+        // Get extra item
+        var feeds = await query
+            .Select(x => new PostFeedItemDto
+            {
+                Post = new PostDto
+                {
+                    Id = x.Post.Id,
+                    ImageUrl = x.Post.ImageUrl,
+                    Description = x.Post.Description,
+                    Privacy = x.Post.Privacy,
+                    CreatedAt = x.Post.CreatedAt,
+                    MoodEmote = new EmoteDto
+                        {
+                            Id = x.Post.MoodEmote.Id,
+                            Name = x.Post.MoodEmote.Name,
+                            ImageUrl = x.Post.MoodEmote.ImageUrl
+                        }
+                },
+                Owner = new UserDto
+                {
+                    Id = x.Post.User.Id,
+                    DisplayName = x.Post.User.DisplayName,
+                    AvatarUrl = x.Post.User.AvatarUrl
+                }
+            }).Take(request.PageSize + 1).ToListAsync();
+        
+        bool hasNextPage = feeds.Count > request.PageSize;
+        feeds = feeds.Take(request.PageSize).ToList();
 
-        // Take limit + 1
-        var feeds = await query.Take(request.Limit + 1).ToListAsync();
-
+        // Next cursor
         string? nextCursor = null;
 
-        if (feeds.Count > request.Limit)
+        if (hasNextPage)
         {
-            var lastVisibleItem = feeds[request.Limit - 1];
+            var lastItem = feeds.Last();
 
-            nextCursor = CursorHelper.Encode(lastVisibleItem.Post.CreatedAt, lastVisibleItem.Post.Id);
-
-            feeds.RemoveAt(request.Limit);
+            nextCursor = CursorHelper.Encode(
+                lastItem.Post.CreatedAt,
+                lastItem.Post.Id
+            );
         }
 
-        var items = feeds.Select(x => new FriendFeedItemDto
-        {
-            Post = new PostDto
-            {
-                Id = x.Post.Id,
-                ImageUrl = x.Post.ImageUrl,
-                Description = x.Post.Description,
-                Privacy = x.Post.Privacy,
-                CreatedAt = x.Post.CreatedAt,
-                ReactionCount = x.Post.Reactions.Count,
-                MoodEmote = new EmoteDto
-                {
-                    Id = x.Post.MoodEmote.Id,
-                    Name = x.Post.MoodEmote.Name,
-                    ImageUrl = x.Post.MoodEmote.ImageUrl
-                }
-            },
+        var response = new CursorPaginationResponse<PostFeedItemDto>(
+                feeds,
+                nextCursor,
+                hasNextPage
+            );
 
-            Owner = new UserDto
-            {
-                Id = x.Post.User.Id,
-                DisplayName = x.Post.User.DisplayName,
-                AvatarUrl = x.Post.User.AvatarUrl
-            }
-        }).ToList();
-
-        var result = new GetFriendFeedResponseDto
-        {
-            Items = items,
-            NextCursor = nextCursor
-        };
-        return Result<GetFriendFeedResponseDto>.Ok(result);
+        return Result<CursorPaginationResponse<PostFeedItemDto>>.Ok(response);
     }
 }

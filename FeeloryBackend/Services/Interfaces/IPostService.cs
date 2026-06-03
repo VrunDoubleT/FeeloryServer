@@ -1,5 +1,7 @@
 using FeeloryBackend.Commons;
+using FeeloryBackend.Models.DTOs.Commons;
 using FeeloryBackend.Models.DTOs.Post;
+using FeeloryBackend.Responses;
 
 namespace FeeloryBackend.Services.Interfaces;
 
@@ -15,14 +17,14 @@ public interface IPostService
     Task<Result> DeleteAsync(Guid userId, Guid postId);
 
     // Get posts by user
-    Task<GetMyPostsResponseDto> GetMyPostsAsync(Guid userId, GetMyPostsRequestDto request);
+    Task<Result<CursorPaginationResponse<MyPostItemDto>>> GetMyPostsAsync(Guid userId, GetMyPostsRequestDto request);
     
     // Get posts by id
     Task<Result<PostDetailDto?>>GetByIdAsync(Guid currentUserId, Guid postId);
     
     // Get my post feed
-    Task<GetFriendFeedResponseDto> GetMyFeedAsync(Guid currentUserId, GetFriendFeedRequestDto request);
+    Task<Result<CursorPaginationResponse<PostFeedItemDto>>> GetMyFeedAsync(Guid currentUserId, CursorPaginationRequest request);
 
     // Get friend post feed
-    Task<Result<GetFriendFeedResponseDto>> GetFriendFeedAsync(Guid currentUserId, Guid profileUserId, GetFriendFeedRequestDto request);
+    Task<Result<CursorPaginationResponse<PostFeedItemDto>>> GetFriendFeedAsync(Guid currentUserId, Guid profileUserId, CursorPaginationRequest request);
 }

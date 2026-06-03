@@ -19,7 +19,6 @@ public static class RabbitMQExtensions
         // Core infrastructure
         services.AddSingleton<IRabbitMQConnectionFactory, RabbitMQConnectionFactory>();
         services.AddSingleton<IEventBus, RabbitMQEventBus>();
-        services.AddSingleton<IPostFeedService, PostFeedService>();
 
         // Publishers
         services.AddSingleton<EmailPublisher>();

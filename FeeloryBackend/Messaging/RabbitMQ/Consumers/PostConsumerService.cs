@@ -22,7 +22,7 @@ public abstract class PostConsumerService : BackgroundService
     protected abstract string QueueName  { get; }
     protected abstract string RoutingKey { get; }
     protected abstract string Action     { get; }
-    protected abstract Task ProcessAsync(AppDbContext db, PostMessage message);
+    protected abstract Task ProcessAsync(IServiceScope scope, PostMessage message);
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         while (!stoppingToken.IsCancellationRequested)
@@ -69,7 +69,7 @@ public abstract class PostConsumerService : BackgroundService
                         using var scope = _scopeFactory.CreateScope();
                         var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
 
-                        await ProcessAsync(db, message);
+                        await ProcessAsync(scope, message);
 
                         await channel.BasicAckAsync(args.DeliveryTag, false, stoppingToken);
                     }

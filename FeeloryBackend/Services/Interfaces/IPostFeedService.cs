@@ -6,11 +6,11 @@ namespace FeeloryBackend.Services.Interfaces;
 public interface IPostFeedService
 {
     // Create post & add new viewers
-    Task HandleAddFeedsAsync(AppDbContext db, PostMessage message);
+    Task HandleAddFeedsAsync(PostMessage message);
     
     // Remove old viewers
-    Task HandleRemoveFeedsAsync(AppDbContext db, PostMessage message);
+    Task HandleRemoveFeedsAsync(PostMessage message);
     
     // Delete post
-    Task HandleDeletePostAsync(AppDbContext db, PostMessage message);
+    Task HandleDeletePostAsync(PostMessage message);
 }
