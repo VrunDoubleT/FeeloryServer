@@ -34,6 +34,7 @@ public class AppDbContext : DbContext
     public DbSet<DayShare> DayShares => Set<DayShare>();
     public DbSet<DaySharePost> DaySharePosts => Set<DaySharePost>();
     public DbSet<DayShareViewer> DayShareViewers => Set<DayShareViewer>();
+    public DbSet<DayShareFeed> DayShareFeeds => Set<DayShareFeed>();
 
     // =======================
     // EMOTE SYSTEM
