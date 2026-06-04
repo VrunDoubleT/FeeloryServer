@@ -8,4 +8,5 @@ public class DayShareFeedItemDto
     public DayShareOwnerDto Owner { get; set; } = null!;
     public int PostCount { get; set; }
     public DateTime CreatedAt { get; set; }
+    public List<DaySharePostItemDto> Posts { get; set; } = new();
 }

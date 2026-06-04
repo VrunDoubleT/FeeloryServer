@@ -7,9 +7,9 @@ using FeeloryBackend.Services.Interfaces;
 
 namespace FeeloryBackend.Messaging.RabbitMQ.Consumers;
 
-public class DayShareAddedConsumer : DayShareFeedConsumerService
+public class DayShareUpdatedConsumer : DayShareFeedConsumerService
 {
-    public DayShareAddedConsumer(
+    public DayShareUpdatedConsumer(
         IRabbitMQConnectionFactory factory,
         IServiceScopeFactory scopeFactory)
         : base(factory, scopeFactory) { }
