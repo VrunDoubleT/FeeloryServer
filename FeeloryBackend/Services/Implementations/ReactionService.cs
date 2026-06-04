@@ -90,7 +90,6 @@ public class ReactionService : IReactionService
         }
         catch (DbUpdateException ex)
         {
-            // Log lỗi thật sự
             Console.WriteLine(ex.InnerException?.Message);
             return Result<ReactionResponseDto>
                 .Fail("Reaction already exists.");
@@ -184,26 +183,25 @@ public class ReactionService : IReactionService
                 .Fail("Post not found.");
         }
 
-        bool canView = await CanViewPostAsync(
-            currentUserId,
-            post);
 
-        if (!canView)
+        if (post.UserId != currentUserId)
         {
             return Result<List<ReactionGroupDto>>
-                .Fail("You do not have permission to view reactions.");
+                .Fail("Only the post owner can view reactions.");
         }
 
         var reactions = await _db.Reactions
             .Where(x => x.PostId == postId)
             .Select(x => new
             {
-                EmoteId = x.Emote.Id,
-                EmoteName = x.Emote.Name,
-                EmoteImageUrl = x.Emote.ImageUrl,
                 UserId = x.User.Id,
                 DisplayName = x.User.DisplayName,
                 AvatarUrl = x.User.AvatarUrl,
+
+                EmoteId = x.Emote.Id,
+                EmoteName = x.Emote.Name,
+                EmoteImageUrl = x.Emote.ImageUrl,
+
                 CreatedAt = x.CreatedAt
             })
             .ToListAsync();
@@ -218,53 +216,72 @@ public class ReactionService : IReactionService
                     Name = g.First().EmoteName,
                     ImageUrl = g.First().EmoteImageUrl
                 },
+
                 Count = g.Count(),
-                Users = g.Select(x => new ReactionUserDto
-                {
-                    User = new UserSummaryDto
+
+                Users = g
+                    .Select(x => new ReactionUserDto
                     {
-                        Id = x.UserId,
-                        DisplayName = x.DisplayName,
-                        AvatarUrl = x.AvatarUrl
-                    },
-                    CreatedAt = x.CreatedAt
-                }).ToList()
+                        User = new UserSummaryDto
+                        {
+                            Id = x.UserId,
+                            DisplayName = x.DisplayName,
+                            AvatarUrl = x.AvatarUrl
+                        },
+
+                        CreatedAt = x.CreatedAt
+                    })
+                    .OrderByDescending(x => x.CreatedAt)
+                    .ToList()
             })
+            .OrderByDescending(x => x.Count)
             .ToList();
+
         return Result<List<ReactionGroupDto>>
             .Ok(grouped);
     }
 
-  
 
     private async Task<bool> CanViewPostAsync(
         Guid currentUserId,
         Post post)
     {
         if (post.UserId == currentUserId)
-        {
             return true;
-        }
 
         return post.Privacy switch
         {
             PostPrivacyConstants.Public => true,
-
+            PostPrivacyConstants.Private => false,
             PostPrivacyConstants.Custom =>
-                await _db.PostViewers.AnyAsync(x =>
-                    x.PostId == post.Id &&
-                    x.ViewerId == currentUserId),
+                await _db.PostFeeds
+                    .AnyAsync(x =>
+                        x.PostId == post.Id &&
+                        x.ViewerId == currentUserId),
 
             _ => false
-        };
+        };  
     }
 
     private async Task<bool> IsEmoteOwnedByUserAsync(
         Guid userId,
         Guid emoteId)
     {
-        return await _db.UserPackages.AnyAsync(up =>
-            up.UserId == userId &&
-            up.Package.Items.Any(i => i.EmoteId == emoteId));
+        bool isDefault = await _db.EmotePackageItems
+            .AnyAsync(x =>
+                x.EmoteId == emoteId &&
+                x.Package.IsDefault);
+
+        if (isDefault)
+            return true;
+
+
+        return await _db.UserPackages
+            .AnyAsync(up =>
+                up.UserId == userId &&
+                _db.EmotePackageItems
+                    .Any(ep =>
+                        ep.PackageId == up.PackageId &&
+                        ep.EmoteId == emoteId));
     }
 }
