@@ -1,16 +1,14 @@
-using FeeloryBackend.Models.DTOs.Auth;
+using FeeloryBackend.Commons;
+using FeeloryBackend.Models.DTOs.Commons;
 using FeeloryBackend.Models.DTOs.User;
+using FeeloryBackend.Responses;
 
 namespace FeeloryBackend.Services.Interfaces;
 
 public interface IUserService
 {
-    // Get user profile by id
-    Task<UserDto> GetByIdAsync(Guid userId);
-    
-    // Update user profile information
-    Task UpdateProfileAsync(Guid userId, UpdateUserRequestDto request);
-    
-    // Search users by keyword
-    Task<List<UserDto>> SearchAsync(string keyword);
+    Task<Result<UserProfileDto>> GetProfileAsync(Guid currentUserId, Guid targetUserId);
+    Task<Result<UserProfileDto>> UpdateProfileAsync(Guid currentUserId, UpdateUserRequestDto request);
+    Task<Result<CursorPaginationResponse<UserProfileDto>>> SearchByDisplayNameAsync(Guid currentUserId, string q, CursorPaginationRequest request);
+    Task<Result<CursorPaginationResponse<UserProfileDto>>> SearchByUsernameAsync(Guid currentUserId, string username, CursorPaginationRequest request);
 }
