@@ -23,6 +23,8 @@ public static class DependencyInjectionExtensions
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
         services.AddScoped<GenerateUniqueUserName>();
+        services.AddScoped<IDayShareService, DayShareService>();
+        services.AddScoped<IDayShareFeedService, DayShareFeedService>();
         return services;
     }
 }

@@ -1,19 +1,34 @@
+using FeeloryBackend.Commons;
+using FeeloryBackend.Models.DTOs.Commons;
 using FeeloryBackend.Models.DTOs.DayShare;
-using FeeloryBackend.Models.DTOs.Post;
+using FeeloryBackend.Responses;
 
 namespace FeeloryBackend.Services.Interfaces;
 
 public interface IDayShareService
 {
-    // Create full day diary share
-    Task<Guid> CreateAsync(Guid userId, CreateDayShareRequestDto request);
-    
-    // Get shared day detail
-    Task<DayShareDto> GetByIdAsync(Guid id);
-    
-    // Delete shared day
-    Task DeleteAsync(Guid userId, Guid id);
-    
-    // Get timeline of shared day
-    Task<List<PostDto>> GetTimelineAsync(Guid dayShareId);
+    Task<Result<DayShareDetailDto>> CreateAsync(
+        Guid currentUserId,
+        CreateDayShareRequestDto dto);
+
+    Task<Result<DayShareDetailDto>> UpdateAsync(
+        Guid currentUserId,
+        UpdateDayShareRequestDto dto);
+
+    Task<Result<DayShareDetailDto>> GetByIdAsync(
+        Guid currentUserId,
+        Guid dayShareId);
+
+    Task<Result> DeleteAsync(
+        Guid currentUserId,
+        Guid dayShareId);
+
+    Task<Result<CursorPaginationResponse<DayShareFeedItemDto>>> GetFeedAsync(
+        Guid currentUserId,
+        CursorPaginationRequest pagination);
+
+    Task<Result<CursorPaginationResponse<DayShareFeedItemDto>>> GetUserFeedAsync(
+        Guid currentUserId,
+        Guid targetUserId,
+        CursorPaginationRequest pagination);
 }
