@@ -1,5 +1,3 @@
-using FeeloryBackend.Services.Interfaces;
-
 namespace FeeloryBackend.Extensions;
 
 using FeeloryBackend.Messaging.RabbitMQ;
@@ -36,6 +34,14 @@ public static class RabbitMQExtensions
         services.AddHostedService<DayShareUpdatedConsumer>();
         services.AddHostedService<DayShareRemovedConsumer>();
         services.AddHostedService<DayShareDeletedConsumer>();
+
+        services.AddScoped<ReactionPublisher>();
+        // Consumers (Background Services)
+        services.AddHostedService<EmailConsumerService>();
+    
+        services.AddHostedService<ReactionNotificationConsumer>();
+        services.AddHostedService<ReactionTaskConsumer>();
+
         return services;
     }
 }

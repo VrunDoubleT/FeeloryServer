@@ -12,4 +12,8 @@ public static class QueueNames
     public const string DayShareAdded   = "dayshare_added_queue";
     public const string DayShareRemoved = "dayshare_removed_queue";
     public const string DayShareDeleted = "dayshare_deleted_queue";
+
+    public const string Reaction = "reaction_queue";
+    public const string TaskReactionAdded = "task_reaction_added_queue";
+
 }

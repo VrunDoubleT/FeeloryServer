@@ -4,6 +4,7 @@ using FeeloryBackend.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FeeloryBackend.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260529140235_SeedNotificationTypes")]
+    partial class SeedNotificationTypes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -69,7 +72,9 @@ namespace FeeloryBackend.Data.Migrations
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<DateTime>("PostedAt")
-                        .HasColumnType("datetime2");
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
 
                     b.Property<Guid>("ViewerId")
                         .HasColumnType("uniqueidentifier");
@@ -80,9 +85,7 @@ namespace FeeloryBackend.Data.Migrations
 
                     b.HasIndex("ViewerId");
 
-
                     b.ToTable("DayShareFeeds", (string)null);
-
                 });
 
             modelBuilder.Entity("FeeloryBackend.Models.Entities.DaySharePost", b =>
@@ -452,10 +455,13 @@ namespace FeeloryBackend.Data.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<Guid?>("DayShareId")
+                        .HasColumnType("uniqueidentifier");
+
                     b.Property<Guid>("EmoteId")
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<Guid>("PostId")
+                    b.Property<Guid?>("PostId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<Guid>("UserId")
@@ -467,8 +473,13 @@ namespace FeeloryBackend.Data.Migrations
 
                     b.HasIndex("UserId");
 
+                    b.HasIndex("DayShareId", "UserId")
+                        .IsUnique()
+                        .HasFilter("[DayShareId] IS NOT NULL");
+
                     b.HasIndex("PostId", "UserId")
-                        .IsUnique();
+                        .IsUnique()
+                        .HasFilter("[PostId] IS NOT NULL");
 
                     b.ToTable("Reactions", (string)null);
                 });
@@ -696,13 +707,13 @@ namespace FeeloryBackend.Data.Migrations
                     b.HasOne("FeeloryBackend.Models.Entities.DayShare", "DayShare")
                         .WithMany("DayShareFeeds")
                         .HasForeignKey("DayShareId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.HasOne("FeeloryBackend.Models.Entities.User", "Viewer")
                         .WithMany()
                         .HasForeignKey("ViewerId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
                     b.Navigation("DayShare");
@@ -883,6 +894,11 @@ namespace FeeloryBackend.Data.Migrations
 
             modelBuilder.Entity("FeeloryBackend.Models.Entities.Reaction", b =>
                 {
+                    b.HasOne("FeeloryBackend.Models.Entities.DayShare", "DayShare")
+                        .WithMany("Reactions")
+                        .HasForeignKey("DayShareId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("FeeloryBackend.Models.Entities.Emote", "Emote")
                         .WithMany("Reactions")
                         .HasForeignKey("EmoteId")
@@ -892,14 +908,15 @@ namespace FeeloryBackend.Data.Migrations
                     b.HasOne("FeeloryBackend.Models.Entities.Post", "Post")
                         .WithMany("Reactions")
                         .HasForeignKey("PostId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("FeeloryBackend.Models.Entities.User", "User")
                         .WithMany("Reactions")
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("DayShare");
 
                     b.Navigation("Emote");
 
@@ -994,6 +1011,8 @@ namespace FeeloryBackend.Data.Migrations
                     b.Navigation("DaySharePosts");
 
                     b.Navigation("DayShareViewers");
+
+                    b.Navigation("Reactions");
                 });
 
             modelBuilder.Entity("FeeloryBackend.Models.Entities.Emote", b =>

@@ -30,6 +30,9 @@ public static class DependencyInjectionExtensions
         services.AddScoped<IEmoteService, EmoteService>();
         services.AddScoped<IEmotePackageService, EmotePackageService>();
 
+        services.AddScoped<IReactionService, ReactionService>();
+        services.AddScoped<ICurrentUserService, CurrentUserService>();
+
         return services;
     }
 }

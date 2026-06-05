@@ -352,18 +352,18 @@ public class DayShareService : IDayShareService
         if (!isOwner)
         {
             // TH1: Xem DayShare của người khác → emote mình đã thả
-            var myReactions = await _db.Reactions
-                .Where(x =>
-                    postIds.Contains(x.PostId) &&
-                    x.UserId == currentUserId)
-                .Select(x => new
-                {
-                    PostId = x.PostId,
-                    EmoteId = x.Emote.Id,
-                    EmoteName = x.Emote.Name,
-                    ImageUrl = x.Emote.ImageUrl
-                })
-                .ToListAsync();
+            // var myReactions = await _db.Reactions
+            //     .Where(x =>
+            //         postIds.Contains(x.PostId) &&
+            //         x.UserId == currentUserId)
+            //     .Select(x => new
+            //     {
+            //         PostId = x.PostId,
+            //         EmoteId = x.Emote.Id,
+            //         EmoteName = x.Emote.Name,
+            //         ImageUrl = x.Emote.ImageUrl
+            //     })
+            //     .ToListAsync();
 
             postItems = rawPosts.Select(p => new DaySharePostItemDto
             {
@@ -372,37 +372,37 @@ public class DayShareService : IDayShareService
                 Description = p.Description,
                 MoodEmote = p.MoodEmote,
                 CreatedAt = p.CreatedAt,
-                MyReaction = myReactions
-                    .Where(r => r.PostId == p.Id)
-                    .Select(r => new EmoteDto
-                    {
-                        Id = r.EmoteId,
-                        Name = r.EmoteName,
-                        ImageUrl = r.ImageUrl
-                    })
-                    .FirstOrDefault(),
+                // MyReaction = myReactions
+                //     .Where(r => r.PostId == p.Id)
+                //     .Select(r => new EmoteDto
+                //     {
+                //         Id = r.EmoteId,
+                //         Name = r.EmoteName,
+                //         ImageUrl = r.ImageUrl
+                //     })
+                //     .FirstOrDefault(),
                 // Reactions = null
             }).ToList();
         }
         else
         {
             // TH2: Xem DayShare của mình → reactions của bạn bè
-            var friendReactions = await _db.Reactions
-                .Where(x =>
-                    postIds.Contains(x.PostId) &&
-                    x.UserId != currentUserId)
-                .Select(x => new
-                {
-                    PostId = x.PostId,
-                    EmoteId = x.Emote.Id,
-                    EmoteName = x.Emote.Name,
-                    EmoteImageUrl = x.Emote.ImageUrl,
-                    UserId = x.User.Id,
-                    DisplayName = x.User.DisplayName,
-                    AvatarUrl = x.User.AvatarUrl,
-                    CreatedAt = x.CreatedAt
-                })
-                .ToListAsync();
+            // var friendReactions = await _db.Reactions
+            //     .Where(x =>
+            //         postIds.Contains(x.PostId) &&
+            //         x.UserId != currentUserId)
+            //     .Select(x => new
+            //     {
+            //         PostId = x.PostId,
+            //         EmoteId = x.Emote.Id,
+            //         EmoteName = x.Emote.Name,
+            //         EmoteImageUrl = x.Emote.ImageUrl,
+            //         UserId = x.User.Id,
+            //         DisplayName = x.User.DisplayName,
+            //         AvatarUrl = x.User.AvatarUrl,
+            //         CreatedAt = x.CreatedAt
+            //     })
+            //     .ToListAsync();
 
             postItems = rawPosts.Select(p => new DaySharePostItemDto
             {
@@ -557,22 +557,22 @@ public class DayShareService : IDayShareService
         var postIds = rawPosts.Select(x => x.PostId).ToList();
 
         // 4. REACTIONS (SIMPLE - POST + USER)
-        var myReactions = await _db.Reactions
-            .Where(x =>
-                postIds.Contains(x.PostId) &&
-                x.UserId == currentUserId)
-            .Select(x => new
-            {
-                x.PostId,
-                EmoteId = x.Emote.Id,
-                EmoteName = x.Emote.Name,
-                ImageUrl = x.Emote.ImageUrl
-            })
-            .ToListAsync();
-
-        var reactionLookup = myReactions
-            .GroupBy(x => x.PostId)
-            .ToDictionary(g => g.Key, g => g.First());
+        // var myReactions = await _db.Reactions
+        //     .Where(x =>
+        //         postIds.Contains(x.PostId) &&
+        //         x.UserId == currentUserId)
+        //     .Select(x => new
+        //     {
+        //         x.PostId,
+        //         EmoteId = x.Emote.Id,
+        //         EmoteName = x.Emote.Name,
+        //         ImageUrl = x.Emote.ImageUrl
+        //     })
+        //     .ToListAsync();
+        //
+        // var reactionLookup = myReactions
+        //     .GroupBy(x => x.PostId)
+        //     .ToDictionary(g => g.Key, g => g.First());
 
         // 5. BUILD RESULT
         var items = feedEntries.Select(x => new DayShareFeedItemDto
@@ -593,14 +593,14 @@ public class DayShareService : IDayShareService
                     MoodEmote = p.MoodEmote,
                     CreatedAt = p.CreatedAt,
 
-                    MyReaction = reactionLookup.ContainsKey(p.PostId)
-                        ? new EmoteDto
-                        {
-                            Id = reactionLookup[p.PostId].EmoteId,
-                            Name = reactionLookup[p.PostId].EmoteName,
-                            ImageUrl = reactionLookup[p.PostId].ImageUrl
-                        }
-                        : null,
+                    // MyReaction = reactionLookup.ContainsKey(p.PostId)
+                    //     ? new EmoteDto
+                    //     {
+                    //         Id = reactionLookup[p.PostId].EmoteId,
+                    //         Name = reactionLookup[p.PostId].EmoteName,
+                    //         ImageUrl = reactionLookup[p.PostId].ImageUrl
+                    //     }
+                    //     : null,
 
                     // Reactions = null
                 }).ToList()
@@ -691,40 +691,40 @@ public class DayShareService : IDayShareService
         var postIds = rawPosts.Select(x => x.PostId).ToList();
 
         // TH1: xem feed của người khác → emote mình đã thả
-        var myReactions = !isOwner
-            ? await _db.Reactions
-                .Where(x =>
-                    postIds.Contains(x.PostId) &&
-                    x.UserId == currentUserId)
-                .Select(x => new
-                {
-                    PostId = x.PostId,
-                    EmoteId = x.Emote.Id,
-                    EmoteName = x.Emote.Name,
-                    ImageUrl = x.Emote.ImageUrl
-                })
-                .ToListAsync()
-            : null;
+        // var myReactions = !isOwner
+        //     ? await _db.Reactions
+        //         .Where(x =>
+        //             postIds.Contains(x.PostId) &&
+        //             x.UserId == currentUserId)
+        //         .Select(x => new
+        //         {
+        //             PostId = x.PostId,
+        //             EmoteId = x.Emote.Id,
+        //             EmoteName = x.Emote.Name,
+        //             ImageUrl = x.Emote.ImageUrl
+        //         })
+        //         .ToListAsync()
+        //     : null;
 
         // TH2: xem feed của mình → reactions của bạn bè
-        var friendReactions = isOwner
-            ? await _db.Reactions
-                .Where(x =>
-                    postIds.Contains(x.PostId) &&
-                    x.UserId != currentUserId)
-                .Select(x => new
-                {
-                    PostId = x.PostId,
-                    EmoteId = x.Emote.Id,
-                    EmoteName = x.Emote.Name,
-                    EmoteImageUrl = x.Emote.ImageUrl,
-                    UserId = x.User.Id,
-                    DisplayName = x.User.DisplayName,
-                    AvatarUrl = x.User.AvatarUrl,
-                    CreatedAt = x.CreatedAt
-                })
-                .ToListAsync()
-            : null;
+        // var friendReactions = isOwner
+        //     ? await _db.Reactions
+        //         .Where(x =>
+        //             postIds.Contains(x.PostId) &&
+        //             x.UserId != currentUserId)
+        //         .Select(x => new
+        //         {
+        //             PostId = x.PostId,
+        //             EmoteId = x.Emote.Id,
+        //             EmoteName = x.Emote.Name,
+        //             EmoteImageUrl = x.Emote.ImageUrl,
+        //             UserId = x.User.Id,
+        //             DisplayName = x.User.DisplayName,
+        //             AvatarUrl = x.User.AvatarUrl,
+        //             CreatedAt = x.CreatedAt
+        //         })
+        //         .ToListAsync()
+            // : null;
 
         var items = dayShares.Select(x => new DayShareFeedItemDto
         {
@@ -746,17 +746,17 @@ public class DayShareService : IDayShareService
                     Id = p.PostId,
                     ImageUrl = p.ImageUrl,
                     MoodEmote = p.MoodEmote,
-                    MyReaction = !isOwner
-                        ? myReactions!
-                            .Where(r => r.PostId == p.PostId)
-                            .Select(r => new EmoteDto
-                            {
-                                Id = r.EmoteId,
-                                Name = r.EmoteName,
-                                ImageUrl = r.ImageUrl
-                            })
-                            .FirstOrDefault()
-                        : null,
+                    // MyReaction = !isOwner
+                    //     ? myReactions!
+                    //         .Where(r => r.PostId == p.PostId)
+                    //         .Select(r => new EmoteDto
+                    //         {
+                    //             Id = r.EmoteId,
+                    //             Name = r.EmoteName,
+                    //             ImageUrl = r.ImageUrl
+                    //         })
+                    //         .FirstOrDefault()
+                    //     : null,
                     // Reactions = isOwner
                     //     ? friendReactions!
                     //         .Where(r => r.PostId == p.PostId)

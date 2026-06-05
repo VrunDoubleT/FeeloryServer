@@ -17,4 +17,5 @@ public class DayShare
     public ICollection<DaySharePost> DaySharePosts { get; set; } = new List<DaySharePost>();
     public ICollection<DayShareFeed> DayShareFeeds { get; set; } = new List<DayShareFeed>();
     public ICollection<DayShareViewer> DayShareViewers { get; set; } = new List<DayShareViewer>();
+  
 }

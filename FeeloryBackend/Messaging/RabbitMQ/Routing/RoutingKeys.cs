@@ -11,4 +11,8 @@ public class RoutingKeys
     public const string DayShareAdded   = "dayshare.added";
     public const string DayShareRemoved = "dayshare.removed";
     public const string DayShareDeleted = "dayshare.deleted";
+
+    public const string Reaction = "reaction.notify";
+    public const string TaskReactionAdded = "task.reaction.added";
+
 }

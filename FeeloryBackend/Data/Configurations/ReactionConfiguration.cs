@@ -24,13 +24,13 @@ public class ReactionConfiguration : IEntityTypeConfiguration<Reaction>
         // Prevent duplicate reaction (1 user = 1 reaction per post)
         builder.HasIndex(x => new { x.PostId, x.UserId })
             .IsUnique();
-
+        
         // Relationship: Reaction → Post
         builder.HasOne(x => x.Post)
             .WithMany(p => p.Reactions)
             .HasForeignKey(x => x.PostId)
             .OnDelete(DeleteBehavior.Restrict);
-
+        
         // Relationship: Reaction → User
         builder.HasOne(x => x.User)
             .WithMany(u => u.Reactions)
