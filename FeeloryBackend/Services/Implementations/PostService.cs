@@ -36,10 +36,10 @@ public class PostService : IPostService
     public async Task<Result<PostDto>> CreateAsync(Guid userId, CreatePostRequestDto request)
     {
         // Validate mood emote
-        bool canUseEmote = await _db.CanUseEmoteAsync(userId, request.MoodEmoteId);
-
-        if (!canUseEmote)
-            return Result<PostDto>.Fail("You do not have permission to use this mood emote");
+        // bool canUseEmote = await _db.CanUseEmoteAsync(userId, request.MoodEmoteId);
+        //
+        // if (!canUseEmote)
+        //     return Result<PostDto>.Fail("You do not have permission to use this mood emote");
 
         // Privacy logic
         List<Guid> viewerIds = [];
@@ -560,5 +560,50 @@ public class PostService : IPostService
             );
 
         return Result<CursorPaginationResponse<PostFeedItemDto>>.Ok(response);
+    }
+    
+    /// <summary>
+    /// Retrieves a post by its identifier.
+    /// Returns null if the post does not exist or has been deleted.
+    /// </summary>
+    /// <param name="postId">
+    /// The unique identifier of the post.
+    /// </param>
+    /// <returns>
+    /// A <see cref="PostDetailDto"/> containing the post information;
+    /// otherwise, null if the post is not found.
+    /// </returns>
+    public async Task<PostDetailDto?> FindByIdAsync(Guid postId)
+    {
+        return await _db.Posts
+            .AsNoTracking()
+            .Where(x =>
+                x.Id == postId &&
+                x.DeletedAt == null)
+            .Select(x => new PostDetailDto
+            {
+                Id = x.Id,
+                ImageUrl = x.ImageUrl,
+                Description = x.Description,
+                Privacy = x.Privacy,
+                MoodEmote = x.MoodEmote.Name,
+                CreatedAt = x.CreatedAt,
+                Owner = new UserDto
+                {
+                    Id = x.User.Id,
+                    DisplayName = x.User.DisplayName,
+                    AvatarUrl = x.User.AvatarUrl
+                },
+                Reactions = x.Reactions
+                    .Select(r => new PostReactionDto
+                    {
+                        UserId = r.UserId,
+                        DisplayName = r.User.DisplayName,
+                        ReactionName = r.Emote.Name,
+                        Icon = r.Emote.ImageUrl
+                    })
+                    .ToList()
+            })
+            .FirstOrDefaultAsync();
     }
 }

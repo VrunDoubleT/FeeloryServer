@@ -16,13 +16,22 @@ public class ReactionService : IReactionService
 {
     private readonly AppDbContext _db;
     private readonly ReactionPublisher _publisher;
+    private readonly IPostService _postService;
+    private readonly IPostAccessService _postAccessService;
+    private readonly IEmoteService _emoteService;
 
     public ReactionService(
         AppDbContext db,
-        ReactionPublisher publisher)
-    {
+        ReactionPublisher publisher,
+        IPostService postService,
+        IPostAccessService postAccessService,
+        IEmoteService emoteService
+    ) {
         _db = db;
         _publisher = publisher;
+        _postService = postService;
+        _postAccessService = postAccessService;
+        _emoteService = emoteService;
     }
 
     public async Task<Result<ReactionResponseDto>> AddToPostAsync(
@@ -30,35 +39,25 @@ public class ReactionService : IReactionService
         Guid postId,
         Guid emoteId)
     {
-        var post = await _db.Posts
-            .FirstOrDefaultAsync(x =>
-                x.Id == postId &&
-                x.DeletedAt == null);
-
+        var post = await _postService.FindByIdAsync(postId);
         if (post is null)
         {
-            return Result<ReactionResponseDto>
-                .Fail("Post not found.");
+            return Result<ReactionResponseDto>.Fail("Post not found");
         }
 
-        bool canView = await CanViewPostAsync(
-            currentUserId,
-            post);
-
-        if (!canView)
+        if (await _postAccessService.IsPostOwnerAsync(postId, currentUserId))
         {
-            return Result<ReactionResponseDto>
-                .Fail("You do not have permission to react to this post.");
+            return  Result<ReactionResponseDto>.Fail("You cannot react to your own post");
         }
-
-        bool emoteOwned = await IsEmoteOwnedByUserAsync(
-            currentUserId,
-            emoteId);
-
-        if (!emoteOwned)
+        
+        if (!await _postAccessService.CanViewPostAsync(postId, currentUserId))
         {
-            return Result<ReactionResponseDto>
-                .Fail("You do not own this emote.");
+            return Result<ReactionResponseDto>.Fail("You do not have permission to react to this post");
+        }
+        
+        if (!await _emoteService.HasEmoteAsync(currentUserId, emoteId))
+        {
+            return Result<ReactionResponseDto>.Fail("You do not own this emote");
         }
 
         var reaction = await _db.Reactions
@@ -91,52 +90,43 @@ public class ReactionService : IReactionService
         catch (DbUpdateException ex)
         {
             Console.WriteLine(ex.InnerException?.Message);
-            return Result<ReactionResponseDto>
-                .Fail("Reaction already exists.");
+            return Result<ReactionResponseDto>.Fail("Reaction already exists.");
         }
 
-        var user = await _db.Users
-            .Where(x => x.Id == currentUserId)
-            .Select(x => new UserSummaryDto
-            {
-                Id = x.Id,
-                DisplayName = x.DisplayName,
-                AvatarUrl = x.AvatarUrl
-            })
-            .FirstAsync();
-
-        var emote = await _db.Emotes
-            .Where(x => x.Id == emoteId)
-            .Select(x => new EmoteDto
-            {
-                Id = x.Id,
-                Name = x.Name,
-                ImageUrl = x.ImageUrl
-            })
-            .FirstAsync();
-
-        // Notification event
-        if (post.UserId != currentUserId)
-        {
-            await _publisher.PublishNotificationAsync(
-                new ReactionMessage
-                {
-                    Action = ReactionMessage.ActionPostReacted,
-                    TargetOwnerId = post.UserId,
-                    ReactorId = currentUserId,
-                    ReactorName = user.DisplayName,
-                    TargetId = postId
-                });
-
-            // Task completion trigger
-            await _publisher.PublishTaskAsync(
-                new TaskReactionMessage
-                {
-                    UserId = currentUserId,
-                    ReactionId = reaction.Id,
-                    CreatedAt = DateTime.UtcNow
-                });
-        }
+        // var user = await _db.Users
+        //     .Where(x => x.Id == currentUserId)
+        //     .Select(x => new UserSummaryDto
+        //     {
+        //         Id = x.Id,
+        //         DisplayName = x.DisplayName,
+        //         AvatarUrl = x.AvatarUrl
+        //     })
+        //     .FirstAsync();
+        //
+        var emote = await _emoteService.FindByIdAsync(emoteId);
+        //
+        // // Notification event
+        // if (post.UserId != currentUserId)
+        // {
+        //     await _publisher.PublishNotificationAsync(
+        //         new ReactionMessage
+        //         {
+        //             Action = ReactionMessage.ActionPostReacted,
+        //             TargetOwnerId = post.UserId,
+        //             ReactorId = currentUserId,
+        //             ReactorName = user.DisplayName,
+        //             TargetId = postId
+        //         });
+        //
+        //     // Task completion trigger
+        //     await _publisher.PublishTaskAsync(
+        //         new TaskReactionMessage
+        //         {
+        //             UserId = currentUserId,
+        //             ReactionId = reaction.Id,
+        //             CreatedAt = DateTime.UtcNow
+        //         });
+        // }
 
         return Result<ReactionResponseDto>.Ok(
             new ReactionResponseDto
@@ -172,22 +162,16 @@ public class ReactionService : IReactionService
         Guid currentUserId,
         Guid postId)
     {
-        var post = await _db.Posts
-            .FirstOrDefaultAsync(x =>
-                x.Id == postId &&
-                x.DeletedAt == null);
+        var post = await _postService.FindByIdAsync(postId);
 
         if (post is null)
         {
-            return Result<List<ReactionGroupDto>>
-                .Fail("Post not found.");
+            return Result<List<ReactionGroupDto>>.Fail("Post not found.");
         }
 
-
-        if (post.UserId != currentUserId)
+        if (post.Owner.Id != currentUserId)
         {
-            return Result<List<ReactionGroupDto>>
-                .Fail("Only the post owner can view reactions.");
+            return Result<List<ReactionGroupDto>>.Fail("Only the post owner can view reactions.");
         }
 
         var reactions = await _db.Reactions
@@ -237,51 +221,6 @@ public class ReactionService : IReactionService
             .OrderByDescending(x => x.Count)
             .ToList();
 
-        return Result<List<ReactionGroupDto>>
-            .Ok(grouped);
-    }
-
-
-    private async Task<bool> CanViewPostAsync(
-        Guid currentUserId,
-        Post post)
-    {
-        if (post.UserId == currentUserId)
-            return true;
-
-        return post.Privacy switch
-        {
-            PostPrivacyConstants.Public => true,
-            PostPrivacyConstants.Private => false,
-            PostPrivacyConstants.Custom =>
-                await _db.PostFeeds
-                    .AnyAsync(x =>
-                        x.PostId == post.Id &&
-                        x.ViewerId == currentUserId),
-
-            _ => false
-        };  
-    }
-
-    private async Task<bool> IsEmoteOwnedByUserAsync(
-        Guid userId,
-        Guid emoteId)
-    {
-        bool isDefault = await _db.EmotePackageItems
-            .AnyAsync(x =>
-                x.EmoteId == emoteId &&
-                x.Package.IsDefault);
-
-        if (isDefault)
-            return true;
-
-
-        return await _db.UserPackages
-            .AnyAsync(up =>
-                up.UserId == userId &&
-                _db.EmotePackageItems
-                    .Any(ep =>
-                        ep.PackageId == up.PackageId &&
-                        ep.EmoteId == emoteId));
+        return Result<List<ReactionGroupDto>>.Ok(grouped);
     }
 }

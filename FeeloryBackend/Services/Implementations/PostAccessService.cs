@@ -27,26 +27,16 @@ public class PostAccessService : IPostAccessService
             })
             .FirstOrDefaultAsync(p => p.Id == postId);
 
-        // Post does not exist or has been deleted
-        if (post is null || post.DeletedAt is not null)
+        if (post is null || post.DeletedAt != null)
             return false;
 
-        // Post owner always has access
         if (post.UserId == requesterId)
             return true;
 
-        return post.Privacy switch
-        {
-            PostPrivacyConstants.Public => true,
+        if (post.Privacy == PostPrivacyConstants.Private)
+            return false;
 
-            PostPrivacyConstants.Private => false,
-
-            // Custom visibility: check PostViewers or PostFeeds
-            PostPrivacyConstants.Custom => await IsInPostViewersAsync(postId, requesterId)
-                                         || await IsInPostFeedAsync(postId, requesterId),
-
-            _ => false
-        };
+        return await IsInPostFeedAsync(postId, requesterId);
     }
 
     public async Task<bool> IsPostOwnerAsync(Guid postId, Guid userId)
@@ -61,13 +51,6 @@ public class PostAccessService : IPostAccessService
     // -------------------------------------------------------
     // Private helper methods
     // -------------------------------------------------------
-    private async Task<bool> IsInPostViewersAsync(Guid postId, Guid viewerId)
-    {
-        return await _context.PostViewers
-            .AsNoTracking()
-            .AnyAsync(pv => pv.PostId == postId && pv.ViewerId == viewerId);
-    }
-
     private async Task<bool> IsInPostFeedAsync(Guid postId, Guid viewerId)
     {
         return await _context.PostFeeds

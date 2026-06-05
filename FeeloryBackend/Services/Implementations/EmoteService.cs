@@ -135,4 +135,48 @@ public class EmoteService : IEmoteService
 
         return Result<List<EmoteDto>>.Ok(recentEmotes);
     }
+    
+    /// <summary>
+    /// Determines whether the specified user can use the given emote.
+    /// Access is granted when the emote belongs to a default package
+    /// or a package owned by the user.
+    /// </summary>
+    public async Task<bool> HasEmoteAsync(Guid userId, Guid emoteId)
+    {
+        return await _db.EmotePackageItems
+            .AnyAsync(x =>
+                x.EmoteId == emoteId &&
+                (
+                    // The emote belongs to a default package
+                    x.Package.IsDefault ||
+
+                    // The emote belongs to a package unlocked by the user
+                    x.Package.UserPackages.Any(up => up.UserId == userId)
+                ));
+    }
+    
+    /// <summary>
+    /// Retrieves an emote by its identifier.
+    /// Returns null if the emote is not found.
+    /// </summary>
+    /// <param name="id">
+    /// The unique identifier of the emote.
+    /// </param>
+    /// <returns>
+    /// An <see cref="EmoteDto"/> containing the emote information;
+    /// otherwise, null if the emote does not exist.
+    /// </returns>
+    public async Task<EmoteDto?> FindByIdAsync(Guid id)
+    {
+        return await _db.Emotes
+            .AsNoTracking()
+            .Where(e => e.Id == id)
+            .Select(e => new EmoteDto
+            {
+                Id = e.Id,
+                Name = e.Name,
+                ImageUrl = e.ImageUrl
+            })
+            .FirstOrDefaultAsync();
+    }
 }

@@ -27,4 +27,10 @@ public interface IPostService
 
     // Get friend post feed
     Task<Result<CursorPaginationResponse<PostFeedItemDto>>> GetFriendFeedAsync(Guid currentUserId, Guid profileUserId, CursorPaginationRequest request);
+    
+    /// <summary>
+    /// Retrieves a post by its identifier.
+    /// Returns null if the post does not exist.
+    /// </summary>
+    Task<PostDetailDto?> FindByIdAsync(Guid postId);
 }
