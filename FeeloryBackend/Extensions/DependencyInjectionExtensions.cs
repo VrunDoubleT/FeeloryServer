@@ -20,6 +20,7 @@ public static class DependencyInjectionExtensions
         services.AddScoped<IPostService, PostService>();
         services.AddScoped<IPostFeedService, PostFeedService>();
         services.AddScoped<IPostAccessService, PostAccessService>();
+        services.AddScoped<IDayShareAccessService, DayShareAccessService>();
         
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
