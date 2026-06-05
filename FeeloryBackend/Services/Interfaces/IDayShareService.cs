@@ -7,11 +7,11 @@ namespace FeeloryBackend.Services.Interfaces;
 
 public interface IDayShareService
 {
-    Task<Result<DayShareDetailDto>> CreateAsync(
+    Task<Result<DayShareDto>> CreateAsync(
         Guid currentUserId,
         CreateDayShareRequestDto dto);
 
-    Task<Result<DayShareDetailDto>> UpdateAsync(
+    Task<Result<DayShareDto>> UpdateAsync(
         Guid currentUserId,
         UpdateDayShareRequestDto dto);
 

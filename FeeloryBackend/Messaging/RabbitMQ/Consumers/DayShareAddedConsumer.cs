@@ -7,16 +7,15 @@ using FeeloryBackend.Services.Interfaces;
 
 namespace FeeloryBackend.Messaging.RabbitMQ.Consumers;
 
-public class DayShareUpdatedConsumer : DayShareFeedConsumerService
+public class DayShareAddedConsumer : RabbitMqConsumerBase<DayShareFeedMessage>
 {
-    public DayShareUpdatedConsumer(
+    public DayShareAddedConsumer(
         IRabbitMQConnectionFactory factory,
         IServiceScopeFactory scopeFactory)
         : base(factory, scopeFactory) { }
 
     protected override string QueueName  => QueueNames.DayShareAdded;
     protected override string RoutingKey => RoutingKeys.DayShareAdded;
-    protected override string Action     => DayShareFeedMessage.ActionAdded;
 
     protected override async Task ProcessAsync(
         IServiceScope scope,
@@ -24,8 +23,7 @@ public class DayShareUpdatedConsumer : DayShareFeedConsumerService
     {
         var service = scope.ServiceProvider
             .GetRequiredService<IDayShareFeedService>();
-     
 
-        await service.HandleAddFeedsAsync( message);
+        await service.HandleAddFeedsAsync(message);
     }
 }

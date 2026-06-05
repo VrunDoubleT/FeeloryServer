@@ -8,7 +8,6 @@ public class RoutingKeys
     public const string PostPermissionRemoved = "post.permission.removed";
     public const string PostDeleted = "post.deleted";
     // Dayshare
-    public const string DayShareCreated = "dayshare.created";
     public const string DayShareAdded   = "dayshare.added";
     public const string DayShareRemoved = "dayshare.removed";
     public const string DayShareDeleted = "dayshare.deleted";

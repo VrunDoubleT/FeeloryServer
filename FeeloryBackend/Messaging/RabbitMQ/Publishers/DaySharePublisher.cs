@@ -17,7 +17,6 @@ public class DaySharePublisher
         // Chọn đúng routing key theo action
         var routingKey = message.Action switch
         {
-            DayShareFeedMessage.ActionCreated => RoutingKeys.DayShareCreated,
             DayShareFeedMessage.ActionAdded   => RoutingKeys.DayShareAdded,
             DayShareFeedMessage.ActionRemoved => RoutingKeys.DayShareRemoved,
             DayShareFeedMessage.ActionDeleted => RoutingKeys.DayShareDeleted,

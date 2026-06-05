@@ -9,7 +9,6 @@ public static class QueueNames
     public const string PostPermissionRemoved = "post_permission_removed_queue";
     public const string PostDeleted = "post_deleted_queue";
     // DayShare
-    public const string DayShareCreated = "dayshare_created_queue";
     public const string DayShareAdded   = "dayshare_added_queue";
     public const string DayShareRemoved = "dayshare_removed_queue";
     public const string DayShareDeleted = "dayshare_deleted_queue";

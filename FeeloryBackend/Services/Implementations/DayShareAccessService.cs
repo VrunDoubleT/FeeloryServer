@@ -14,59 +14,53 @@ public class DayShareAccessService : IDayShareAccessService
         _context = context;
     }
 
+    /// <summary>
+    /// Check if a user can view a DayShare.
+    /// RULE:
+    /// - Owner always allowed
+    /// - Otherwise must exist in DayShareFeeds
+    /// </summary>
     public async Task<bool> CanViewDayShareAsync(Guid dayShareId, Guid requesterId)
     {
-        var dayShare = await _context.DayShares
+        // 1. Check owner OR feed in ONE query
+        return await _context.DayShares
             .AsNoTracking()
-            .Select(d => new
-            {
-                d.Id,
-                d.OwnerId,
-                d.ShareType,
-                d.DeletedAt
-            })
-            .FirstOrDefaultAsync(d => d.Id == dayShareId);
-
-        if (dayShare is null || dayShare.DeletedAt is not null)
-            return false;
-
-        if (dayShare.OwnerId == requesterId)
-            return true;
-
-        return dayShare.ShareType switch
-        {
-            DayShareTypeConstants.Friends => await IsInDayShareViewersAsync(dayShareId, requesterId)
-                                             || await IsInDayShareFeedAsync(dayShareId, requesterId),
-
-            DayShareTypeConstants.Custom => await IsInDayShareViewersAsync(dayShareId, requesterId),
-
-            _ => false
-        };
+            .AnyAsync(d =>
+                d.Id == dayShareId &&
+                d.DeletedAt == null &&
+                (
+                    d.OwnerId == requesterId ||
+                    _context.DayShareFeeds.Any(f =>
+                        f.DayShareId == dayShareId &&
+                        f.ViewerId == requesterId)
+                )
+            );
     }
 
+    /// <summary>
+    /// Check if user is owner of DayShare
+    /// </summary>
     public async Task<bool> IsDayShareOwnerAsync(Guid dayShareId, Guid userId)
     {
         return await _context.DayShares
             .AsNoTracking()
-            .AnyAsync(d => d.Id == dayShareId
-                        && d.OwnerId == userId
-                        && d.DeletedAt == null);
+            .AnyAsync(d =>
+                d.Id == dayShareId &&
+                d.OwnerId == userId &&
+                d.DeletedAt == null);
     }
-
-    // -------------------------------------------------------
-    // Private helpers
-    // -------------------------------------------------------
-    private async Task<bool> IsInDayShareViewersAsync(Guid dayShareId, Guid viewerId)
+    
+    /// <summary>
+    /// Checks if the specified post is included in any DayShare that the requester has access to.
+    /// Access is determined via DayShareFeed visibility (not direct ownership).
+    /// </summary>
+    public async Task<bool> IsPostInAnyVisibleDayShareAsync(Guid postId, Guid requesterId)
     {
-        return await _context.DayShareViewers
+        return await _context.DaySharePosts
             .AsNoTracking()
-            .AnyAsync(v => v.DayShareId == dayShareId && v.ViewerId == viewerId);
-    }
-
-    private async Task<bool> IsInDayShareFeedAsync(Guid dayShareId, Guid viewerId)
-    {
-        return await _context.DayShareFeeds
-            .AsNoTracking()
-            .AnyAsync(f => f.DayShareId == dayShareId && f.ViewerId == viewerId);
+            .AnyAsync(dsp =>
+                dsp.PostId == postId &&
+                dsp.DayShare.DayShareFeeds.Any(f =>
+                    f.ViewerId == requesterId));
     }
 }

@@ -31,8 +31,7 @@ public static class RabbitMQExtensions
         services.AddHostedService<PostRemovedConsumerService>();
         services.AddHostedService<PostDeletedConsumerService>();
 
-        services.AddHostedService<DayShareCreatedConsumer>();
-        services.AddHostedService<DayShareUpdatedConsumer>();
+        services.AddHostedService<DayShareAddedConsumer>();
         services.AddHostedService<DayShareRemovedConsumer>();
         services.AddHostedService<DayShareDeletedConsumer>();
     

@@ -2,7 +2,6 @@ namespace FeeloryBackend.Messaging.RabbitMQ.Messages;
 
 public class DayShareFeedMessage
 {
-      public const string ActionCreated = "CREATED";
       public const string ActionAdded   = "ADDED";
       public const string ActionRemoved = "REMOVED";
       public const string ActionDeleted = "DELETED";

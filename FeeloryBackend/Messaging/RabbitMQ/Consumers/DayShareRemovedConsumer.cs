@@ -7,7 +7,7 @@ using FeeloryBackend.Services.Interfaces;
 
 namespace FeeloryBackend.Messaging.RabbitMQ.Consumers;
 
-public class DayShareRemovedConsumer : DayShareFeedConsumerService
+public class DayShareRemovedConsumer : RabbitMqConsumerBase<DayShareFeedMessage>
 {
     public DayShareRemovedConsumer(
         IRabbitMQConnectionFactory factory,
@@ -16,7 +16,6 @@ public class DayShareRemovedConsumer : DayShareFeedConsumerService
 
     protected override string QueueName  => QueueNames.DayShareRemoved;
     protected override string RoutingKey => RoutingKeys.DayShareRemoved;
-    protected override string Action     => DayShareFeedMessage.ActionRemoved;
 
     protected override async Task ProcessAsync(
         IServiceScope scope,
@@ -24,6 +23,7 @@ public class DayShareRemovedConsumer : DayShareFeedConsumerService
     {
         var service = scope.ServiceProvider
             .GetRequiredService<IDayShareFeedService>();
+        
         await service.HandleRemovedAsync(message);
     }
 }

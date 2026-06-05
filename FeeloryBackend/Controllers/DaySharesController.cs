@@ -31,8 +31,7 @@ public class DaySharesController : ControllerBase
             .CreateAsync(CurrentUserId, dto);
 
         return result.IsSuccess
-            ? Ok(new ApiResponse<DayShareDetailDto>(
-                result.Data, "DayShare created successfully"))
+            ? Ok(new ApiResponse<DayShareDto>(result.Data, "DayShare created successfully"))
             : BadRequest(new ApiErrorResponse(result.Error!));
     }
 
@@ -44,8 +43,7 @@ public class DaySharesController : ControllerBase
             .UpdateAsync(CurrentUserId, dto);
 
         return result.IsSuccess
-            ? Ok(new ApiResponse<DayShareDetailDto>(
-                result.Data, "DayShare updated successfully"))
+            ? Ok(new ApiResponse<DayShareDto>(result.Data, "DayShare updated successfully"))
             : BadRequest(new ApiErrorResponse(result.Error!));
     }
 

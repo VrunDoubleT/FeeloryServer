@@ -11,4 +11,10 @@ public interface IDayShareAccessService
     /// Checks whether the specified user is the owner of the DayShare.
     /// </summary>
     Task<bool> IsDayShareOwnerAsync(Guid dayShareId, Guid userId);
+    
+    /// <summary>
+    /// Determines whether a post is accessible through any DayShare that is visible to the requester.
+    /// This includes DayShares where the requester is included in the DayShareFeed.
+    /// </summary>
+    Task<bool> IsPostInAnyVisibleDayShareAsync(Guid postId, Guid requesterId);
 }
