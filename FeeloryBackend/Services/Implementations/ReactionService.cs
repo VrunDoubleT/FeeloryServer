@@ -16,20 +16,17 @@ public class ReactionService : IReactionService
 {
     private readonly AppDbContext _db;
     private readonly ReactionPublisher _publisher;
-    private readonly IPostService _postService;
     private readonly IPostAccessService _postAccessService;
     private readonly IEmoteService _emoteService;
 
     public ReactionService(
         AppDbContext db,
         ReactionPublisher publisher,
-        IPostService postService,
         IPostAccessService postAccessService,
         IEmoteService emoteService
     ) {
         _db = db;
         _publisher = publisher;
-        _postService = postService;
         _postAccessService = postAccessService;
         _emoteService = emoteService;
     }
@@ -39,7 +36,7 @@ public class ReactionService : IReactionService
         Guid postId,
         Guid emoteId)
     {
-        var post = await _postService.FindByIdAsync(postId);
+        var post = await _db.Posts.Where(x => x.Id == postId && x.DeletedAt == null).FirstOrDefaultAsync();
         if (post is null)
         {
             return Result<ReactionResponseDto>.Fail("Post not found");
@@ -162,14 +159,14 @@ public class ReactionService : IReactionService
         Guid currentUserId,
         Guid postId)
     {
-        var post = await _postService.FindByIdAsync(postId);
+        var post = await _db.Posts.Where(x => x.Id == postId && x.DeletedAt == null).FirstOrDefaultAsync();
 
         if (post is null)
         {
             return Result<List<ReactionGroupDto>>.Fail("Post not found.");
         }
 
-        if (post.Owner.Id != currentUserId)
+        if (post.UserId != currentUserId)
         {
             return Result<List<ReactionGroupDto>>.Fail("Only the post owner can view reactions.");
         }
@@ -222,5 +219,37 @@ public class ReactionService : IReactionService
             .ToList();
 
         return Result<List<ReactionGroupDto>>.Ok(grouped);
+    }
+    
+    /// <summary>
+    /// Retrieves the emote that a user reacted with on a specific post.
+    /// Returns null if the user has not reacted to the post.
+    /// </summary>
+    /// <param name="userId">
+    /// The unique identifier of the user.
+    /// </param>
+    /// <param name="postId">
+    /// The unique identifier of the post.
+    /// </param>
+    /// <returns>
+    /// An <see cref="EmoteDto"/> if the user has reacted to the post;
+    /// otherwise, null.
+    /// </returns>
+    public async Task<EmoteDto?> GetUserReactionEmoteAsync(
+        Guid userId,
+        Guid postId)
+    {
+        return await _db.Reactions
+            .AsNoTracking()
+            .Where(x =>
+                x.UserId == userId &&
+                x.PostId == postId)
+            .Select(x => new EmoteDto
+            {
+                Id = x.Emote.Id,
+                Name = x.Emote.Name,
+                ImageUrl = x.Emote.ImageUrl
+            })
+            .FirstOrDefaultAsync();
     }
 }

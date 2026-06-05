@@ -16,7 +16,6 @@ public class PostPublisher
     {
         var routingKey = message.Action switch
         {
-            PostMessage.ActionCreated => RoutingKeys.PostCreated,
             PostMessage.ActionAdded   => RoutingKeys.PostPermissionAdded,
             PostMessage.ActionRemoved => RoutingKeys.PostPermissionRemoved,
             PostMessage.ActionDeleted => RoutingKeys.PostDeleted,

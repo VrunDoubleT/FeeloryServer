@@ -21,11 +21,12 @@ public static class RabbitMQExtensions
         // Publishers
         services.AddSingleton<EmailPublisher>();
         services.AddSingleton<PostPublisher>();
-
+        services.AddScoped<ReactionPublisher>();
         services.AddScoped<DaySharePublisher>();
+        
         // Consumers (Background Services)
         services.AddHostedService<EmailConsumerService>();
-        services.AddHostedService<PostCreatedConsumerService>();
+        
         services.AddHostedService<PostAddedConsumerService>();
         services.AddHostedService<PostRemovedConsumerService>();
         services.AddHostedService<PostDeletedConsumerService>();
@@ -34,13 +35,8 @@ public static class RabbitMQExtensions
         services.AddHostedService<DayShareUpdatedConsumer>();
         services.AddHostedService<DayShareRemovedConsumer>();
         services.AddHostedService<DayShareDeletedConsumer>();
-
-        services.AddScoped<ReactionPublisher>();
-        // Consumers (Background Services)
-        services.AddHostedService<EmailConsumerService>();
     
         services.AddHostedService<ReactionNotificationConsumer>();
-        services.AddHostedService<ReactionTaskConsumer>();
 
         return services;
     }

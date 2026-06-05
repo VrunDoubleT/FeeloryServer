@@ -55,7 +55,9 @@ public class PostsController : ControllerBase
     public async Task<IActionResult> GetMyPosts([FromQuery] GetMyPostsRequestDto request)
     {
         var result = await _postService.GetMyPostsAsync(CurrentUserId, request);
-        return Ok(new ApiResponse<CursorPaginationResponse<MyPostItemDto>>(result.Data, "Get my posts successfully"));
+        return result.IsSuccess
+            ? Ok(result.Data)
+            : BadRequest(new ApiErrorResponse(result.Error!));
     }
     
     // Get posts by id
@@ -78,8 +80,9 @@ public class PostsController : ControllerBase
     public async Task<IActionResult> GetMyFeed([FromQuery] CursorPaginationRequest request)
     {
         var result = await _postService.GetMyFeedAsync(CurrentUserId, request);
-        return Ok(new ApiResponse<CursorPaginationResponse<PostFeedItemDto>>(result.Data, "Get feed successfully")
-        );
+        return result.IsSuccess
+            ? Ok(result.Data)
+            : BadRequest(new ApiErrorResponse(result.Error!));
     }
     
     // Get friend post feed
@@ -89,7 +92,7 @@ public class PostsController : ControllerBase
         var result = await _postService.GetFriendFeedAsync(CurrentUserId, id, request);
         
         return result.IsSuccess
-            ?Ok(new ApiResponse<CursorPaginationResponse<PostFeedItemDto>>(result.Data, "Get feed successfully"))
-            : BadRequest( new ApiErrorResponse(result.Error!));
+            ?Ok(result.Data)
+            : BadRequest(new ApiErrorResponse(result.Error!));
     }
 }

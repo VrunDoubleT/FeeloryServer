@@ -19,12 +19,4 @@ public class ReactionPublisher
             RoutingKeys.Reaction,
             message);
     }
-
-    public async Task PublishTaskAsync(
-        TaskReactionMessage message)
-    {
-        await _eventBus.PublishAsync(
-            RoutingKeys.TaskReactionAdded,
-            message);
-    }
 }

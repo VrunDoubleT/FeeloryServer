@@ -5,14 +5,13 @@ using FeeloryBackend.Services.Interfaces;
 
 namespace FeeloryBackend.Messaging.RabbitMQ.Consumers;
 
-public class PostDeletedConsumerService : PostConsumerService
+public class PostDeletedConsumerService : RabbitMqConsumerBase<PostMessage>
 {
     public PostDeletedConsumerService(IRabbitMQConnectionFactory factory, IServiceScopeFactory scopeFactory)
         : base(factory, scopeFactory) { }
 
     protected override string QueueName => QueueNames.PostDeleted;
     protected override string RoutingKey => RoutingKeys.PostDeleted;
-    protected override string Action => PostMessage.ActionDeleted;
 
     protected override async Task ProcessAsync(IServiceScope scope, PostMessage message)
     {

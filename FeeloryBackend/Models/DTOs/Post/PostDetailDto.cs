@@ -1,15 +1,13 @@
 ﻿using FeeloryBackend.Models.DTOs.Auth;
+using FeeloryBackend.Models.DTOs.Emote;
+using FeeloryBackend.Models.DTOs.Reaction;
 
 namespace FeeloryBackend.Models.DTOs.Post;
 
 public class PostDetailDto
 {
-    public Guid Id { get; set; }
-    public string ImageUrl { get; set; } = null!;
-    public string? Description { get; set; }
-    public string Privacy { get; set; } = null!;
-    public string MoodEmote { get; set; } = null!;
-    public DateTime CreatedAt { get; set; }
+    public PostDto Post { get; set; } = null!;
     public UserDto Owner { get; set; } = null!;
-    public List<PostReactionDto> Reactions { get; set; } = [];
+    public EmoteDto? Emote { get; set; }
+    public List<ReactionGroupDto> Reactions { get; set; } = [];
 }
