@@ -1,18 +1,30 @@
+using FeeloryBackend.Commons;
+using FeeloryBackend.Models.DTOs.Commons;
 using FeeloryBackend.Models.DTOs.Post;
+using FeeloryBackend.Responses;
 
 namespace FeeloryBackend.Services.Interfaces;
 
 public interface IPostService
 {
     // Create diary post
-    Task<Guid> CreateAsync(Guid userId, CreatePostRequestDto request);
+    Task<Result<PostDto>> CreateAsync(Guid userId, CreatePostRequestDto request);
 
     // Update post
-    Task UpdateAsync(Guid userId, Guid postId, UpdatePostRequestDto request);
+    Task<Result<PostDto>> UpdateAsync(Guid userId, Guid postId, UpdatePostRequestDto request);
 
     // Delete post
-    Task DeleteAsync(Guid userId, Guid postId);
+    Task<Result> DeleteAsync(Guid userId, Guid postId);
 
     // Get posts by user
-    Task<List<PostDto>> GetByUserAsync(Guid userId);
+    Task<Result<CursorPaginationResponse<MyPostItemDto>>> GetMyPostsAsync(Guid userId, GetMyPostsRequestDto request);
+    
+    // Get posts by id
+    Task<Result<PostDetailDto?>>GetByIdAsync(Guid currentUserId, Guid postId);
+    
+    // Get my post feed
+    Task<Result<CursorPaginationResponse<PostFeedItemDto>>> GetMyFeedAsync(Guid currentUserId, CursorPaginationRequest request);
+
+    // Get friend post feed
+    Task<Result<CursorPaginationResponse<PostFeedItemDto>>> GetFriendFeedAsync(Guid currentUserId, Guid profileUserId, CursorPaginationRequest request);
 }
