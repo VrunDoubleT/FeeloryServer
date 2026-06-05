@@ -27,6 +27,9 @@ public static class DependencyInjectionExtensions
         services.AddScoped<IDayShareFeedService, DayShareFeedService>();
         services.AddScoped<ICalendarService, CalendarService>();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
+        services.AddScoped<IEmoteService, EmoteService>();
+        services.AddScoped<IEmotePackageService, EmotePackageService>();
+
         return services;
     }
 }
