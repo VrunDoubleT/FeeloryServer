@@ -14,4 +14,11 @@ public interface INotificationCreatorService
     /// Create multiple notifications
     /// </summary>
     Task CreateRangeAsync(IEnumerable<Notification> notifications, CancellationToken cancellationToken = default);
+
+    Task CreateOrUpdateReactionAsync(
+        Guid ownerId,
+        Guid reactorId,
+        Guid postId,
+        Guid emoteId,
+        CancellationToken cancellationToken = default);
 }

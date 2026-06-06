@@ -1,4 +1,5 @@
-using FeeloryBackend.Messaging.RabbitMQ.Messages;
+using FeeloryBackend.Messaging.RabbitMQ.Messages.DayShares;
+using FeeloryBackend.Messaging.RabbitMQ.Messages.Posts;
 using FeeloryBackend.Messaging.RabbitMQ.Routing;
 
 namespace FeeloryBackend.Messaging.RabbitMQ.Publishers;
@@ -12,17 +13,27 @@ public class DaySharePublisher
         _eventBus = eventBus;
     }
 
-    public async Task PublishAsync(DayShareFeedMessage message)
+    /// <summary>
+    /// Publish a day share created message
+    /// </summary>
+    public async Task PublishDayShareCreatedAsync(DayShareCreatedMessage message)
     {
-        // Chọn đúng routing key theo action
-        var routingKey = message.Action switch
-        {
-            DayShareFeedMessage.ActionAdded   => RoutingKeys.DayShareAdded,
-            DayShareFeedMessage.ActionRemoved => RoutingKeys.DayShareRemoved,
-            DayShareFeedMessage.ActionDeleted => RoutingKeys.DayShareDeleted,
-            _ => throw new ArgumentException($"Unknown action: {message.Action}")
-        };
+        await _eventBus.PublishAsync(RoutingKeys.DayShareCreated, message);
+    }
 
-        await _eventBus.PublishAsync(routingKey, message);
+    /// <summary>
+    /// Publish a day share updated message
+    /// </summary>
+    public async Task PublishDayShareUpdatedAsync(DayShareUpdatedMessage message)
+    {
+        await _eventBus.PublishAsync(RoutingKeys.DayShareUpdated, message);
+    }
+
+    /// <summary>
+    /// Publish a day share deleted message
+    /// </summary>
+    public async Task PublishDayShareDeletedAsync(DayShareDeletedMessage message)
+    {
+        await _eventBus.PublishAsync(RoutingKeys.DayShareDeleted, message);
     }
 }

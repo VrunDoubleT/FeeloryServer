@@ -1,5 +1,4 @@
 using FeeloryBackend.Commons;
-using FeeloryBackend.Constants;
 using FeeloryBackend.Data;
 using FeeloryBackend.Messaging.RabbitMQ.Messages;
 using FeeloryBackend.Messaging.RabbitMQ.Publishers;
@@ -15,18 +14,18 @@ namespace FeeloryBackend.Services.Implementations;
 public class ReactionService : IReactionService
 {
     private readonly AppDbContext _db;
-    private readonly ReactionPublisher _publisher;
+    private readonly PostReactionPublisher _postReactionPublisher;
     private readonly IPostAccessService _postAccessService;
     private readonly IEmoteService _emoteService;
 
     public ReactionService(
         AppDbContext db,
-        ReactionPublisher publisher,
+        PostReactionPublisher postReactionPublisher,
         IPostAccessService postAccessService,
         IEmoteService emoteService
     ) {
         _db = db;
-        _publisher = publisher;
+        _postReactionPublisher = postReactionPublisher;
         _postAccessService = postAccessService;
         _emoteService = emoteService;
     }
@@ -89,47 +88,23 @@ public class ReactionService : IReactionService
             Console.WriteLine(ex.InnerException?.Message);
             return Result<ReactionResponseDto>.Fail("Reaction already exists.");
         }
-
-        // var user = await _db.Users
-        //     .Where(x => x.Id == currentUserId)
-        //     .Select(x => new UserSummaryDto
-        //     {
-        //         Id = x.Id,
-        //         DisplayName = x.DisplayName,
-        //         AvatarUrl = x.AvatarUrl
-        //     })
-        //     .FirstAsync();
-        //
+        
         var emote = await _emoteService.FindByIdAsync(emoteId);
-        //
-        // // Notification event
-        // if (post.UserId != currentUserId)
-        // {
-        //     await _publisher.PublishNotificationAsync(
-        //         new ReactionMessage
-        //         {
-        //             Action = ReactionMessage.ActionPostReacted,
-        //             TargetOwnerId = post.UserId,
-        //             ReactorId = currentUserId,
-        //             ReactorName = user.DisplayName,
-        //             TargetId = postId
-        //         });
-        //
-        //     // Task completion trigger
-        //     await _publisher.PublishTaskAsync(
-        //         new TaskReactionMessage
-        //         {
-        //             UserId = currentUserId,
-        //             ReactionId = reaction.Id,
-        //             CreatedAt = DateTime.UtcNow
-        //         });
-        // }
+        
+        // Notification event
+        await _postReactionPublisher.PublishPostReactionAddedAsync(new PostReactionAddedMessage()
+        {
+            OwnerId = post.UserId,
+            ReactorId = currentUserId,
+            PostId = postId,
+            EmoteId = emoteId
+        });
 
         return Result<ReactionResponseDto>.Ok(
             new ReactionResponseDto
             {
                 ReactionId = reaction.Id,
-                Emote = emote,
+                Emote = emote!,
                 CreatedAt = reaction.CreatedAt
             });
     }

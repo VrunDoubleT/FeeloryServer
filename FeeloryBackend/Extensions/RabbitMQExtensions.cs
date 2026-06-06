@@ -1,3 +1,8 @@
+using FeeloryBackend.Messaging.RabbitMQ.Consumers.DayShareFeeds;
+using FeeloryBackend.Messaging.RabbitMQ.Consumers.Email;
+using FeeloryBackend.Messaging.RabbitMQ.Consumers.Notifications.Consumers;
+using FeeloryBackend.Messaging.RabbitMQ.Consumers.PostFeeds;
+
 namespace FeeloryBackend.Extensions;
 
 using FeeloryBackend.Messaging.RabbitMQ;
@@ -21,25 +26,27 @@ public static class RabbitMQExtensions
         // Publishers
         services.AddSingleton<EmailPublisher>();
         services.AddSingleton<PostPublisher>();
-        services.AddScoped<ReactionPublisher>();
-        services.AddScoped<DaySharePublisher>();
-        services.AddScoped<NotificationPublisher>();
+        services.AddSingleton<PostReactionPublisher>();
+        services.AddSingleton<DaySharePublisher>();
+        services.AddSingleton<NotificationPublisher>();
         
         // Consumers (Background Services)
         // Email
         services.AddHostedService<EmailConsumerService>();
         // Post
-        services.AddHostedService<PostAddedConsumerService>();
-        services.AddHostedService<PostRemovedConsumerService>();
-        services.AddHostedService<PostDeletedConsumerService>();
+        services.AddHostedService<PostCreatedFeedConsumer>();
+        services.AddHostedService<PostDeletedFeedConsumer>();
+        services.AddHostedService<PostUpdatedFeedAddedConsumer>();
+        services.AddHostedService<PostUpdatedFeedRemovedConsumer>();
         // DayShare
-        services.AddHostedService<DayShareAddedConsumer>();
-        services.AddHostedService<DayShareRemovedConsumer>();
-        services.AddHostedService<DayShareDeletedConsumer>();
+        services.AddHostedService<DayShareCreatedFeedConsumer>();
+        services.AddHostedService<DayShareDeletedFeedConsumer>();
+        services.AddHostedService<DayShareUpdatedFeedAddedConsumer>();
+        services.AddHostedService<DayShareUpdatedFeedRemovedConsumer>();
         //Notification
         services.AddHostedService<PostCreatedNotificationConsumer>();
-        services.AddHostedService<PostReactionNotificationConsumer>();
         services.AddHostedService<DayShareCreatedNotificationConsumer>();
+        services.AddHostedService<PostReactionNotificationConsumer>();
         services.AddHostedService<FriendRequestReceivedNotificationConsumer>();
         services.AddHostedService<FriendRequestAcceptedNotificationConsumer>();
         services.AddHostedService<MissionCompletedNotificationConsumer>();

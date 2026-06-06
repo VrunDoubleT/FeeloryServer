@@ -13,30 +13,6 @@ public class NotificationPublisher
     }
 
     /// <summary>
-    /// Publish post created message
-    /// </summary>
-    public async Task PublishPostCreatedAsync(PostCreatedMessage message)
-    {
-        await _eventBus.PublishAsync(NotificationRoutingKeys.PostCreated, message);
-    }
-
-    /// <summary>
-    /// Publish DayShare created message
-    /// </summary>
-    public async Task PublishDayShareCreatedAsync(DayShareCreatedMessage message)
-    {
-        await _eventBus.PublishAsync(NotificationRoutingKeys.DayShareCreated, message);
-    }
-
-    /// <summary>
-    /// Publish post reaction added message
-    /// </summary>
-    public async Task PublishPostReactionAddedAsync(PostReactionAddedMessage message)
-    {
-        await _eventBus.PublishAsync(NotificationRoutingKeys.PostReactionAdded, message);
-    }
-
-    /// <summary>
     /// Publish friend request received message
     /// </summary>
     public async Task PublishFriendRequestReceivedAsync(FriendRequestReceivedMessage message)

@@ -15,17 +15,17 @@ public class PostFeedService : IPostFeedService
     }
     
     // CREATE POST & ADD NEW VIEWERS
-    public async Task HandleAddFeedsAsync(PostMessage message)
+    public async Task HandleAddFeedsAsync(Guid postId, IReadOnlyCollection<Guid> addedViewerIds)
     {
-        var post = await _db.Posts.FirstOrDefaultAsync(x => x.Id == message.PostId);
+        var post = await _db.Posts.FirstOrDefaultAsync(x => x.Id == postId);
 
         if (post == null) return;
 
-        var feeds = message.ViewerIds.Distinct()
+        var feeds = addedViewerIds.Distinct()
             .Select(viewerId => new PostFeed
             {
                 Id = Guid.NewGuid(),
-                PostId = message.PostId,
+                PostId = postId,
                 ViewerId = viewerId,
                 PostedAt = post.CreatedAt
             });
@@ -35,10 +35,10 @@ public class PostFeedService : IPostFeedService
     }
 
     // REMOVE VIEWERS
-    public async Task HandleRemoveFeedsAsync(PostMessage message)
+    public async Task HandleRemoveFeedsAsync(Guid postId, IReadOnlyCollection<Guid> removedViewerIds)
     {
         var feeds = await _db.PostFeeds
-            .Where(x => x.PostId == message.PostId && message.ViewerIds.Contains(x.ViewerId))
+            .Where(x => x.PostId == postId && removedViewerIds.Contains(x.ViewerId))
             .ToListAsync();
         
         if (feeds.Count == 0) return;
@@ -49,10 +49,10 @@ public class PostFeedService : IPostFeedService
     }
 
     // DELETE POST
-    public async Task HandleDeletePostAsync(PostMessage message)
+    public async Task HandleDeletePostAsync(Guid postId)
     {
         var feeds = await _db.PostFeeds
-            .Where(x => x.PostId == message.PostId)
+            .Where(x => x.PostId == postId)
             .ToListAsync();
 
         if (feeds.Count == 0) return;

@@ -3,6 +3,8 @@ using FeeloryBackend.Constants;
 using FeeloryBackend.Data;
 using FeeloryBackend.Extensions;
 using FeeloryBackend.Helpers;
+using FeeloryBackend.Messaging.RabbitMQ.Messages;
+using FeeloryBackend.Messaging.RabbitMQ.Publishers;
 using FeeloryBackend.Models.DTOs.Auth;
 using FeeloryBackend.Models.DTOs.Commons;
 using FeeloryBackend.Models.DTOs.Friend;
@@ -16,9 +18,14 @@ namespace FeeloryBackend.Services.Implementations;
 public class FriendService : IFriendService
 {
     private readonly AppDbContext _db;
+    private readonly NotificationPublisher _notificationPublisher;
 
-    public FriendService(AppDbContext db) => _db = db;
-    
+    public FriendService(AppDbContext db, NotificationPublisher notificationPublisher)
+    {
+        _db = db;
+        _notificationPublisher = notificationPublisher;
+    }
+
     public async Task<Result> SendRequestAsync(Guid senderId, Guid receiverId)
     {
         if (senderId == receiverId)
@@ -43,16 +50,26 @@ public class FriendService : IFriendService
         if (!receiverExists)
             return Result.Fail("The user does not exist");
 
-        _db.FriendRequests.Add(new FriendRequest()
+        var friendRequest = new FriendRequest()
         {
-            Id         = Guid.NewGuid(),
-            SenderId   = senderId,
+            Id = Guid.NewGuid(),
+            SenderId = senderId,
             ReceiverId = receiverId,
-            Status     = FriendRequestConstants.Pending,
-            CreatedAt  = DateTime.UtcNow
-        });
+            Status = FriendRequestConstants.Pending,
+            CreatedAt = DateTime.UtcNow
+        };
 
+        _db.FriendRequests.Add(friendRequest);
         await _db.SaveChangesAsync();
+
+        // Publish a friend request notification message
+        await _notificationPublisher.PublishFriendRequestReceivedAsync(new FriendRequestReceivedMessage()
+        {
+            SenderId = friendRequest.SenderId,
+            ReceiverId = friendRequest.ReceiverId,
+            FriendRequestId = friendRequest.Id
+        });
+        
         return Result.Ok();
     }
 
@@ -71,8 +88,15 @@ public class FriendService : IFriendService
 
         // Create a Friend relationship using canonical ordering via the factory method
         _db.Friends.Add(Friend.Create(request.SenderId, request.ReceiverId));
-
         await _db.SaveChangesAsync();
+
+        await _notificationPublisher.PublishFriendRequestAcceptedAsync(new FriendRequestAcceptedMessage()
+        {
+            SenderId = request.SenderId,
+            AccepterId = request.ReceiverId,
+            FriendRequestId = requestId
+        });
+        
         return Result.Ok();
     }
 
@@ -187,7 +211,8 @@ public class FriendService : IFriendService
         var response = new CursorPaginationResponse<FriendDto>(
                 friends,
                 nextCursor,
-                hasNextPage
+                hasNextPage,
+                message:"Friends list retrieved successfully"
             );
 
         return Result<CursorPaginationResponse<FriendDto>>.Ok(response);
@@ -262,7 +287,8 @@ public class FriendService : IFriendService
         var response = new CursorPaginationResponse<FriendRequestDto>(
                 requests,
                 nextCursor,
-                hasNextPage
+                hasNextPage,
+                message:"Successfully retrieved the friend request list"
             );
 
         return Result<CursorPaginationResponse<FriendRequestDto>>.Ok(response);

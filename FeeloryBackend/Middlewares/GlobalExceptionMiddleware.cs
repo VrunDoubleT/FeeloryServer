@@ -29,6 +29,8 @@ public class GlobalExceptionMiddleware
             {
                 throw;
             }
+            
+            Console.WriteLine(ex.Message);
 
             context.Response.Clear();
             context.Response.ContentType = "application/json";

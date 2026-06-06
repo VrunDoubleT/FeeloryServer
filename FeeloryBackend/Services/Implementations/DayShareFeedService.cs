@@ -17,22 +17,23 @@ public class DayShareFeedService : IDayShareFeedService
         _db = db;
     }
 
-    public async Task HandleAddFeedsAsync(
-        DayShareFeedMessage message)
+    public async Task HandleAddFeedsAsync(Guid dayShareId, IReadOnlyCollection<Guid> addedViewerIds)
     {
-        foreach (var viewerId in message.ViewerIds.Distinct())
+        foreach (var viewerId in addedViewerIds.Distinct())
         {
             bool exists = await _db.DayShareFeeds.AnyAsync(x =>
-                x.DayShareId == message.DayShareId &&
+                x.DayShareId == dayShareId &&
                 x.ViewerId == viewerId);
 
             if (exists)
+            {
                 continue;
+            }
 
             _db.DayShareFeeds.Add(new DayShareFeed
             {
                 Id = Guid.NewGuid(),
-                DayShareId = message.DayShareId,
+                DayShareId = dayShareId,
                 ViewerId = viewerId,
                 PostedAt = DateTime.UtcNow
             });
@@ -41,13 +42,12 @@ public class DayShareFeedService : IDayShareFeedService
         await _db.SaveChangesAsync();
     }
 
-    public async Task HandleRemovedAsync(
-        DayShareFeedMessage message)
+    public async Task HandleRemovedAsync(Guid dayShareId, IReadOnlyCollection<Guid> removedViewerIds)
     {
         var feeds = await _db.DayShareFeeds
             .Where(x =>
-                x.DayShareId == message.DayShareId &&
-                message.ViewerIds.Contains(x.ViewerId))
+                x.DayShareId == dayShareId &&
+                removedViewerIds.Contains(x.ViewerId))
             .ToListAsync();
 
         _db.DayShareFeeds.RemoveRange(feeds);
@@ -55,12 +55,11 @@ public class DayShareFeedService : IDayShareFeedService
         await _db.SaveChangesAsync();
     }
 
-    public async Task HandleDeletedAsync(
-        DayShareFeedMessage message)
+    public async Task HandleDeletedAsync(Guid dayShareId)
     {
         var feeds = await _db.DayShareFeeds
             .Where(x =>
-                x.DayShareId == message.DayShareId)
+                x.DayShareId == dayShareId)
             .ToListAsync();
 
         _db.DayShareFeeds.RemoveRange(feeds);

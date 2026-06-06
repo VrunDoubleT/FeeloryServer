@@ -37,6 +37,7 @@
     <ItemGroup>
       <Folder Include="Data\Migrations\" />
       <Folder Include="Filters\" />
+      <Folder Include="Messaging\RabbitMQ\Messages\Notifications\" />
     </ItemGroup>
 
 </Project>

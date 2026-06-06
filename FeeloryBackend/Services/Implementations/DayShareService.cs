@@ -5,6 +5,7 @@ using FeeloryBackend.Data;
 using FeeloryBackend.Extensions;
 using FeeloryBackend.Helpers;
 using FeeloryBackend.Messaging.RabbitMQ.Messages;
+using FeeloryBackend.Messaging.RabbitMQ.Messages.DayShares;
 using FeeloryBackend.Messaging.RabbitMQ.Publishers;
 using FeeloryBackend.Models.DTOs.Commons;
 using FeeloryBackend.Models.DTOs.DayShare;
@@ -70,7 +71,10 @@ public class DayShareService : IDayShareService
             return Result<DayShareDto>.Fail(viewerResult.Error!);
         }
 
-        var viewerIds = viewerResult.Data;
+        var viewerIds = viewerResult.Data!;
+        
+        // Add owner
+        viewerIds.Add(currentUserId);
 
         // Prevent duplicate share on the same date
         bool exists = await _db.DayShares.AnyAsync(x =>
@@ -105,11 +109,11 @@ public class DayShareService : IDayShareService
         await _db.SaveChangesAsync();
 
         // Publish feed event
-        await _publisher.PublishAsync(new DayShareFeedMessage
+        await _publisher.PublishDayShareCreatedAsync(new DayShareCreatedMessage()
         {
-            Action = DayShareFeedMessage.ActionAdded,
+            AuthorId = currentUserId,
             DayShareId = dayShare.Id,
-            ViewerIds = viewerIds!
+            RecipientIds = viewerIds
         });
 
         return Result<DayShareDto>.Ok(ToDto(dayShare));
@@ -190,6 +194,7 @@ public class DayShareService : IDayShareService
 
         // Calculate differences
         var removedViewerIds = oldViewerIds
+            .Where(x => x != currentUserId)
             .Except(newViewerIds!)
             .ToList();
 
@@ -203,28 +208,14 @@ public class DayShareService : IDayShareService
         dayShare.UpdatedAt = DateTime.UtcNow;
 
         await _db.SaveChangesAsync();
-
-        // Remove feeds
-        if (removedViewerIds.Any())
+        
+        await _publisher.PublishDayShareUpdatedAsync(new DayShareUpdatedMessage()
         {
-            await _publisher.PublishAsync(new DayShareFeedMessage
-            {
-                Action = DayShareFeedMessage.ActionRemoved,
-                DayShareId = dayShare.Id,
-                ViewerIds = removedViewerIds
-            });
-        }
-
-        // Add feeds
-        if (addedViewerIds.Any())
-        {
-            await _publisher.PublishAsync(new DayShareFeedMessage
-            {
-                Action = DayShareFeedMessage.ActionAdded,
-                DayShareId = dayShare.Id,
-                ViewerIds = addedViewerIds
-            });
-        }
+            AuthorId = currentUserId,
+            DayShareId = dayShare.Id,
+            AddedViewerIds = addedViewerIds,
+            RemovedViewerIds = removedViewerIds
+        });
 
         return Result<DayShareDto>.Ok(ToDto(dayShare));
     }
@@ -337,11 +328,9 @@ public class DayShareService : IDayShareService
         dayShare.DeletedAt = DateTime.UtcNow;
         await _db.SaveChangesAsync();
 
-        await _publisher.PublishAsync(new DayShareFeedMessage
+        await _publisher.PublishDayShareDeletedAsync(new DayShareDeletedMessage()
         {
-            Action = DayShareFeedMessage.ActionDeleted,
-            DayShareId = dayShare.Id,
-            ViewerIds = new List<Guid>()
+            DayShareId = dayShare.Id
         });
 
         return Result.Ok();

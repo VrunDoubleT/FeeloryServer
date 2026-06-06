@@ -1,6 +1,10 @@
+using System.Text.Json;
 using FeeloryBackend.Data;
+using FeeloryBackend.Messaging.RabbitMQ.Consumers.Notifications.Factories;
 using FeeloryBackend.Models.Entities;
+using FeeloryBackend.Models.Enums;
 using FeeloryBackend.Services.Interfaces;
+using Microsoft.EntityFrameworkCore;
 using Task = System.Threading.Tasks.Task;
 
 namespace FeeloryBackend.Services.Implementations;
@@ -28,8 +32,7 @@ public class NotificationCreatorService : INotificationCreatorService
             notification,
             cancellationToken);
 
-        await _context.SaveChangesAsync(
-            cancellationToken);
+        await _context.SaveChangesAsync(cancellationToken);
     }
 
     /// <summary>
@@ -52,7 +55,52 @@ public class NotificationCreatorService : INotificationCreatorService
             notificationList,
             cancellationToken);
 
-        await _context.SaveChangesAsync(
+        await _context.SaveChangesAsync(cancellationToken);
+    }
+    
+    public async Task CreateOrUpdateReactionAsync(
+        Guid ownerId,
+        Guid reactorId,
+        Guid postId,
+        Guid emoteId,
+        CancellationToken cancellationToken = default)
+    {
+        var notification = await _context.Notifications
+            .FirstOrDefaultAsync(
+                x =>
+                    x.UserId == ownerId &&
+                    x.ActorId == reactorId &&
+                    x.TargetId == postId &&
+                    x.Type == NotificationType.PostReactionAdded,
+                cancellationToken);
+
+        if (notification is not null)
+        {
+            // Update emote metadata
+            notification.DataJson = JsonSerializer.Serialize(
+                new
+                {
+                    EmoteId = emoteId
+                });
+            
+            await _context.SaveChangesAsync(cancellationToken);
+            return;
+        }
+
+        notification = NotificationFactory.Create(
+            userId: ownerId,
+            actorId: reactorId,
+            type: NotificationType.PostReactionAdded,
+            targetId: postId,
+            metadata: new
+            {
+                EmoteId = emoteId
+            });
+
+        await _context.Notifications.AddAsync(
+            notification,
             cancellationToken);
+
+        await _context.SaveChangesAsync(cancellationToken);
     }
 }

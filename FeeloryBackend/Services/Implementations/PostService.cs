@@ -4,6 +4,7 @@ using FeeloryBackend.Data;
 using FeeloryBackend.Extensions;
 using FeeloryBackend.Helpers;
 using FeeloryBackend.Messaging.RabbitMQ.Messages;
+using FeeloryBackend.Messaging.RabbitMQ.Messages.Posts;
 using FeeloryBackend.Messaging.RabbitMQ.Publishers;
 using FeeloryBackend.Models.DTOs.Auth;
 using FeeloryBackend.Models.DTOs.Commons;
@@ -21,6 +22,7 @@ public class PostService : IPostService
     private readonly AppDbContext _db;
     private readonly ICloudinaryService _cloudinaryService;
     private readonly PostPublisher _postPublisher;
+    private readonly NotificationPublisher _notificationPublisher;
     private readonly IEmoteService _emoteService;
     private readonly IPostAccessService _postAccessService;
     private readonly IReactionService _reactionService;
@@ -29,6 +31,7 @@ public class PostService : IPostService
         AppDbContext db,
         ICloudinaryService cloudinaryService,
         PostPublisher postPublisher,
+        NotificationPublisher notificationPublisher,
         IEmoteService emoteService,
         IPostAccessService postAccessService,
         IReactionService reactionService
@@ -37,6 +40,7 @@ public class PostService : IPostService
         _db = db;
         _cloudinaryService = cloudinaryService;
         _postPublisher = postPublisher;
+        _notificationPublisher = notificationPublisher;
         _emoteService = emoteService;
         _postAccessService = postAccessService;
         _reactionService = reactionService;
@@ -85,12 +89,12 @@ public class PostService : IPostService
         await _db.SaveChangesAsync();
 
         // Publish RabbitMQ
-        await _postPublisher.PublishPostAsync(
-            new PostMessage
+        await _postPublisher.PublishPostCreatedAsync(
+            new PostCreatedMessage()
             {
-                Action = PostMessage.ActionAdded,
                 PostId = post.Id,
-                ViewerIds = viewerIds.ToList()
+                AuthorId = userId,
+                RecipientIds = viewerIds
             });
 
         await _db.Entry(post).Reference(x => x.User).LoadAsync();
@@ -158,28 +162,13 @@ public class PostService : IPostService
 
         await _db.SaveChangesAsync();
 
-        // Publish RabbitMQ
-        if (addedUsers.Any())
+        await _postPublisher.PublishPostUpdatedAsync(new PostUpdatedMessage()
         {
-            await _postPublisher.PublishPostAsync(
-                new PostMessage
-                {
-                    Action = PostMessage.ActionAdded,
-                    PostId = post.Id,
-                    ViewerIds = addedUsers
-                });
-        }
-
-        if (removedUsers.Any())
-        {
-            await _postPublisher.PublishPostAsync(
-                new PostMessage
-                {
-                    Action = PostMessage.ActionRemoved,
-                    PostId = post.Id,
-                    ViewerIds = removedUsers
-                });
-        }
+            AuthorId = userId,
+            PostId = postId,
+            AddedViewerIds = addedUsers,
+            RemovedViewerIds = removedUsers
+        });
 
         await _db.Entry(post).Reference(x => x.User).LoadAsync();
         await _db.Entry(post).Reference(x => x.MoodEmote).LoadAsync();
@@ -217,10 +206,9 @@ public class PostService : IPostService
         await _db.SaveChangesAsync();
 
         // Publish RabbitMQ
-        await _postPublisher.PublishPostAsync(
-            new PostMessage
+        await _postPublisher.PublishPostDeletedAsync(
+            new PostDeletedMessage()
             {
-                Action = PostMessage.ActionDeleted,
                 PostId = post.Id
             });
 

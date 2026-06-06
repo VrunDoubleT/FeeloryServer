@@ -12,5 +12,5 @@ public class PostReactionAddedMessage
     public Guid OwnerId { get; set; }
 
     // Reaction code
-    public string ReactionCode { get; set; } = null!;
+    public Guid EmoteId { get; set; }
 }

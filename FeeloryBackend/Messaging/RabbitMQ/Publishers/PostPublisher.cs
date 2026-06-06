@@ -1,4 +1,5 @@
 ﻿using FeeloryBackend.Messaging.RabbitMQ.Messages;
+using FeeloryBackend.Messaging.RabbitMQ.Messages.Posts;
 using FeeloryBackend.Messaging.RabbitMQ.Routing;
 
 namespace FeeloryBackend.Messaging.RabbitMQ.Publishers;
@@ -7,20 +8,33 @@ public class PostPublisher
 {
     private readonly IEventBus _eventBus;
 
-    public PostPublisher(IEventBus eventBus)
+    public PostPublisher(
+        IEventBus eventBus)
     {
         _eventBus = eventBus;
     }
 
-    public async Task PublishPostAsync(PostMessage message)
+    /// <summary>
+    /// Publish a post created message
+    /// </summary>
+    public async Task PublishPostCreatedAsync(PostCreatedMessage message)
     {
-        var routingKey = message.Action switch
-        {
-            PostMessage.ActionAdded   => RoutingKeys.PostPermissionAdded,
-            PostMessage.ActionRemoved => RoutingKeys.PostPermissionRemoved,
-            PostMessage.ActionDeleted => RoutingKeys.PostDeleted,
-            _ => throw new ArgumentException($"Unknown action: {message.Action}")
-        };
-        await _eventBus.PublishAsync(routingKey, message);
+        await _eventBus.PublishAsync(RoutingKeys.PostCreated, message);
+    }
+
+    /// <summary>
+    /// Publish a post permission removed message
+    /// </summary>
+    public async Task PublishPostUpdatedAsync(PostUpdatedMessage message)
+    {
+        await _eventBus.PublishAsync(RoutingKeys.PostUpdated, message);
+    }
+
+    /// <summary>
+    /// Publish a post deleted message
+    /// </summary>
+    public async Task PublishPostDeletedAsync(PostDeletedMessage message)
+    {
+        await _eventBus.PublishAsync(RoutingKeys.PostDeleted, message);
     }
 }

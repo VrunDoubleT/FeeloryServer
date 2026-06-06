@@ -5,12 +5,9 @@ namespace FeeloryBackend.Services.Interfaces;
 
 public interface IDayShareFeedService
 {
-    Task HandleAddFeedsAsync(
-        DayShareFeedMessage message);
+    Task HandleAddFeedsAsync(Guid dayShareId, IReadOnlyCollection<Guid> addedViewerIds);
 
-    Task HandleRemovedAsync(
-        DayShareFeedMessage message);
+    Task HandleRemovedAsync(Guid dayShareId, IReadOnlyCollection<Guid> removedViewerIds);
 
-    Task HandleDeletedAsync(
-        DayShareFeedMessage message);
+    Task HandleDeletedAsync(Guid dayShareId);
 }
