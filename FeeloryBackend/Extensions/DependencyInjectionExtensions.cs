@@ -11,30 +11,38 @@ public static class DependencyInjectionExtensions
         services.AddHttpContextAccessor();
         
         // Register custom services
+        
+        // Auth
+        services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IRefreshTokenService, RefreshTokenService>();
-        services.AddScoped<IEmailService, EmailService>();
-        services.AddScoped<ICloudinaryService, CloudinaryService>();
         services.AddScoped<IPasswordHasherService, PasswordHasherService>();
+        services.AddScoped<GenerateUniqueUserName>();
+        services.AddScoped<ICurrentUserService, CurrentUserService>();
+        // Email
+        services.AddScoped<IEmailService, EmailService>();
+        // Cloudinary
+        services.AddScoped<ICloudinaryService, CloudinaryService>();
+        // Friend
         services.AddScoped<IFriendService, FriendService>();
+        // Post
         services.AddScoped<IPostService, PostService>();
         services.AddScoped<IPostFeedService, PostFeedService>();
         services.AddScoped<IPostAccessService, PostAccessService>();
+        // Dayshare
         services.AddScoped<IDayShareAccessService, DayShareAccessService>();
-        
-        services.AddScoped<IAuthService, AuthService>();
-        services.AddScoped<ICurrentUserService, CurrentUserService>();
-        services.AddScoped<GenerateUniqueUserName>();
         services.AddScoped<IDayShareService, DayShareService>();
         services.AddScoped<IDayShareFeedService, DayShareFeedService>();
+        // Calendar
         services.AddScoped<ICalendarService, CalendarService>();
-        services.AddScoped<ICurrentUserService, CurrentUserService>();
+        // Emote
         services.AddScoped<IEmoteService, EmoteService>();
         services.AddScoped<IEmotePackageService, EmotePackageService>();
-
+        //Reaction
         services.AddScoped<IReactionService, ReactionService>();
-        services.AddScoped<ICurrentUserService, CurrentUserService>();
-
+        // Notification
+        services.AddScoped<INotificationCreatorService, NotificationCreatorService>();
+        
         return services;
     }
 }

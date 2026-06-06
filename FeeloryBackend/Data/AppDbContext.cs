@@ -47,7 +47,6 @@ public class AppDbContext : DbContext
     // NOTIFICATION SYSTEM
     // =======================
     public DbSet<Notification> Notifications => Set<Notification>();
-    public DbSet<NotificationType> NotificationTypes => Set<NotificationType>();
 
     // =======================
     // GAMIFICATION / TASK SYSTEM
@@ -103,7 +102,6 @@ public class AppDbContext : DbContext
         // NOTIFICATION SYSTEM
         // =======================
         modelBuilder.ApplyConfiguration(new NotificationConfiguration());
-        modelBuilder.ApplyConfiguration(new NotificationTypeConfiguration());
 
         // =======================
         // TASK SYSTEM

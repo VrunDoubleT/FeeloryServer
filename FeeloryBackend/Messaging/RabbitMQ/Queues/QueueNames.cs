@@ -14,4 +14,6 @@ public static class QueueNames
     public const string DayShareDeleted = "dayshare_deleted_queue";
     //Reaction
     public const string Reaction = "reaction_queue";
+    // Notification
+    
 }
