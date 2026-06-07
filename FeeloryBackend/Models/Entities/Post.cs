@@ -21,4 +21,5 @@ public class Post
     public ICollection<PostFeed> PostFeeds { get; set; } = new List<PostFeed>();
     public ICollection<Reaction> Reactions { get; set; } = new List<Reaction>();
     public ICollection<DaySharePost> DaySharePosts { get; set; } = new List<DaySharePost>();
+    public ICollection<UserMissionReactionHistory> ReactionMissionHistories { get; set; } = new List<UserMissionReactionHistory>();
 }

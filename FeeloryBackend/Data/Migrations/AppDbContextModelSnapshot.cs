@@ -274,6 +274,89 @@ namespace FeeloryBackend.Data.Migrations
                     b.ToTable("FriendRequests", (string)null);
                 });
 
+            modelBuilder.Entity("FeeloryBackend.Models.Entities.Mission", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)");
+
+                    b.Property<int>("DurationDays")
+                        .HasColumnType("int");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<Guid>("MissionTypeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("TargetValue")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MissionTypeId");
+
+                    b.ToTable("Missions", (string)null);
+                });
+
+            modelBuilder.Entity("FeeloryBackend.Models.Entities.MissionReward", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("MissionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("PackageId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PackageId");
+
+                    b.HasIndex("MissionId", "PackageId")
+                        .IsUnique();
+
+                    b.ToTable("MissionRewards", (string)null);
+                });
+
+            modelBuilder.Entity("FeeloryBackend.Models.Entities.MissionType", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("MetricKey")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MetricKey")
+                        .IsUnique();
+
+                    b.ToTable("MissionTypes", (string)null);
+                });
+
             modelBuilder.Entity("FeeloryBackend.Models.Entities.Notification", b =>
                 {
                     b.Property<Guid>("Id")
@@ -449,84 +532,6 @@ namespace FeeloryBackend.Data.Migrations
                     b.ToTable("Reactions", (string)null);
                 });
 
-            modelBuilder.Entity("FeeloryBackend.Models.Entities.Task", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.Property<int>("TargetValue")
-                        .HasColumnType("int");
-
-                    b.Property<Guid>("TaskTypeId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TaskTypeId");
-
-                    b.ToTable("Tasks", (string)null);
-                });
-
-            modelBuilder.Entity("FeeloryBackend.Models.Entities.TaskReward", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("PackageId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("TaskId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PackageId");
-
-                    b.HasIndex("TaskId", "PackageId")
-                        .IsUnique();
-
-                    b.ToTable("TaskRewards", (string)null);
-                });
-
-            modelBuilder.Entity("FeeloryBackend.Models.Entities.TaskType", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<string>("Description")
-                        .HasMaxLength(255)
-                        .HasColumnType("nvarchar(255)");
-
-                    b.Property<string>("MetricKey")
-                        .IsRequired()
-                        .HasMaxLength(50)
-                        .HasColumnType("nvarchar(50)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(100)
-                        .HasColumnType("nvarchar(100)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("MetricKey")
-                        .IsUnique();
-
-                    b.ToTable("TaskTypes", (string)null);
-                });
-
             modelBuilder.Entity("FeeloryBackend.Models.Entities.User", b =>
                 {
                     b.Property<Guid>("Id")
@@ -598,6 +603,79 @@ namespace FeeloryBackend.Data.Migrations
                     b.ToTable("UserLoginHistories", (string)null);
                 });
 
+            modelBuilder.Entity("FeeloryBackend.Models.Entities.UserMission", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("CompletedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("CurrentValue")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("ExpiredAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<Guid>("MissionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTime?>("RewardClaimedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("StartedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MissionId");
+
+                    b.HasIndex("UserId", "MissionId")
+                        .IsUnique();
+
+                    b.ToTable("UserMissions", (string)null);
+                });
+
+            modelBuilder.Entity("FeeloryBackend.Models.Entities.UserMissionReactionHistory", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("MissionId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("PostId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid?>("ReactorId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("MissionId");
+
+                    b.HasIndex("PostId");
+
+                    b.HasIndex("ReactorId");
+
+                    b.HasIndex("UserId", "MissionId", "PostId", "ReactorId")
+                        .IsUnique()
+                        .HasFilter("[ReactorId] IS NOT NULL");
+
+                    b.ToTable("UserMissionReactionHistories", (string)null);
+                });
+
             modelBuilder.Entity("FeeloryBackend.Models.Entities.UserPackage", b =>
                 {
                     b.Property<Guid>("Id")
@@ -623,37 +701,6 @@ namespace FeeloryBackend.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("UserPackages", (string)null);
-                });
-
-            modelBuilder.Entity("FeeloryBackend.Models.Entities.UserTaskProgress", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<DateTime?>("CompletedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("CurrentValue")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsCompleted")
-                        .HasColumnType("bit");
-
-                    b.Property<Guid>("TaskId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("uniqueidentifier");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("TaskId");
-
-                    b.HasIndex("UserId", "TaskId")
-                        .IsUnique();
-
-                    b.ToTable("UserTaskProgresses", (string)null);
                 });
 
             modelBuilder.Entity("FeeloryBackend.Models.Entities.DayShare", b =>
@@ -781,6 +828,36 @@ namespace FeeloryBackend.Data.Migrations
                     b.Navigation("Sender");
                 });
 
+            modelBuilder.Entity("FeeloryBackend.Models.Entities.Mission", b =>
+                {
+                    b.HasOne("FeeloryBackend.Models.Entities.MissionType", "MissionType")
+                        .WithMany("Missions")
+                        .HasForeignKey("MissionTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("MissionType");
+                });
+
+            modelBuilder.Entity("FeeloryBackend.Models.Entities.MissionReward", b =>
+                {
+                    b.HasOne("FeeloryBackend.Models.Entities.Mission", "Mission")
+                        .WithMany("Rewards")
+                        .HasForeignKey("MissionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("FeeloryBackend.Models.Entities.EmotePackage", "Package")
+                        .WithMany("MissionRewards")
+                        .HasForeignKey("PackageId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Mission");
+
+                    b.Navigation("Package");
+                });
+
             modelBuilder.Entity("FeeloryBackend.Models.Entities.Notification", b =>
                 {
                     b.HasOne("FeeloryBackend.Models.Entities.User", "Actor")
@@ -883,36 +960,6 @@ namespace FeeloryBackend.Data.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("FeeloryBackend.Models.Entities.Task", b =>
-                {
-                    b.HasOne("FeeloryBackend.Models.Entities.TaskType", "TaskType")
-                        .WithMany("Tasks")
-                        .HasForeignKey("TaskTypeId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("TaskType");
-                });
-
-            modelBuilder.Entity("FeeloryBackend.Models.Entities.TaskReward", b =>
-                {
-                    b.HasOne("FeeloryBackend.Models.Entities.EmotePackage", "Package")
-                        .WithMany("TaskRewards")
-                        .HasForeignKey("PackageId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("FeeloryBackend.Models.Entities.Task", "Task")
-                        .WithMany("Rewards")
-                        .HasForeignKey("TaskId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Package");
-
-                    b.Navigation("Task");
-                });
-
             modelBuilder.Entity("FeeloryBackend.Models.Entities.UserLoginHistory", b =>
                 {
                     b.HasOne("FeeloryBackend.Models.Entities.User", "User")
@@ -920,6 +967,59 @@ namespace FeeloryBackend.Data.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("FeeloryBackend.Models.Entities.UserMission", b =>
+                {
+                    b.HasOne("FeeloryBackend.Models.Entities.Mission", "Mission")
+                        .WithMany("UserMissions")
+                        .HasForeignKey("MissionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("FeeloryBackend.Models.Entities.User", "User")
+                        .WithMany("UserMissions")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Mission");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("FeeloryBackend.Models.Entities.UserMissionReactionHistory", b =>
+                {
+                    b.HasOne("FeeloryBackend.Models.Entities.Mission", "Mission")
+                        .WithMany("ReactionHistories")
+                        .HasForeignKey("MissionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("FeeloryBackend.Models.Entities.Post", "Post")
+                        .WithMany("ReactionMissionHistories")
+                        .HasForeignKey("PostId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("FeeloryBackend.Models.Entities.User", "Reactor")
+                        .WithMany("ReactedMissionHistories")
+                        .HasForeignKey("ReactorId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("FeeloryBackend.Models.Entities.User", "User")
+                        .WithMany("MissionReactionHistories")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Mission");
+
+                    b.Navigation("Post");
+
+                    b.Navigation("Reactor");
 
                     b.Navigation("User");
                 });
@@ -939,25 +1039,6 @@ namespace FeeloryBackend.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Package");
-
-                    b.Navigation("User");
-                });
-
-            modelBuilder.Entity("FeeloryBackend.Models.Entities.UserTaskProgress", b =>
-                {
-                    b.HasOne("FeeloryBackend.Models.Entities.Task", "Task")
-                        .WithMany("UserProgresses")
-                        .HasForeignKey("TaskId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("FeeloryBackend.Models.Entities.User", "User")
-                        .WithMany("TaskProgresses")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Task");
 
                     b.Navigation("User");
                 });
@@ -984,9 +1065,23 @@ namespace FeeloryBackend.Data.Migrations
                 {
                     b.Navigation("Items");
 
-                    b.Navigation("TaskRewards");
+                    b.Navigation("MissionRewards");
 
                     b.Navigation("UserPackages");
+                });
+
+            modelBuilder.Entity("FeeloryBackend.Models.Entities.Mission", b =>
+                {
+                    b.Navigation("ReactionHistories");
+
+                    b.Navigation("Rewards");
+
+                    b.Navigation("UserMissions");
+                });
+
+            modelBuilder.Entity("FeeloryBackend.Models.Entities.MissionType", b =>
+                {
+                    b.Navigation("Missions");
                 });
 
             modelBuilder.Entity("FeeloryBackend.Models.Entities.Post", b =>
@@ -997,19 +1092,9 @@ namespace FeeloryBackend.Data.Migrations
 
                     b.Navigation("PostViewers");
 
+                    b.Navigation("ReactionMissionHistories");
+
                     b.Navigation("Reactions");
-                });
-
-            modelBuilder.Entity("FeeloryBackend.Models.Entities.Task", b =>
-                {
-                    b.Navigation("Rewards");
-
-                    b.Navigation("UserProgresses");
-                });
-
-            modelBuilder.Entity("FeeloryBackend.Models.Entities.TaskType", b =>
-                {
-                    b.Navigation("Tasks");
                 });
 
             modelBuilder.Entity("FeeloryBackend.Models.Entities.User", b =>
@@ -1024,6 +1109,8 @@ namespace FeeloryBackend.Data.Migrations
 
                     b.Navigation("LoginHistories");
 
+                    b.Navigation("MissionReactionHistories");
+
                     b.Navigation("Notifications");
 
                     b.Navigation("PostFeeds");
@@ -1032,13 +1119,15 @@ namespace FeeloryBackend.Data.Migrations
 
                     b.Navigation("Posts");
 
+                    b.Navigation("ReactedMissionHistories");
+
                     b.Navigation("Reactions");
 
                     b.Navigation("ReceivedFriendRequests");
 
                     b.Navigation("SentFriendRequests");
 
-                    b.Navigation("TaskProgresses");
+                    b.Navigation("UserMissions");
 
                     b.Navigation("UserPackages");
                 });

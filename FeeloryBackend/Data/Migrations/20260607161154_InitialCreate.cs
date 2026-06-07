@@ -40,17 +40,16 @@ namespace FeeloryBackend.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "TaskTypes",
+                name: "MissionTypes",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    MetricKey = table.Column<string>(type: "nvarchar(50)", maxLength: 50, nullable: false),
-                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
-                    Description = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true)
+                    MetricKey = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
+                    Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_TaskTypes", x => x.Id);
+                    table.PrimaryKey("PK_MissionTypes", x => x.Id);
                 });
 
             migrationBuilder.CreateTable(
@@ -96,22 +95,25 @@ namespace FeeloryBackend.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "Tasks",
+                name: "Missions",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    TaskTypeId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    MissionTypeId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(100)", maxLength: 100, nullable: false),
                     Description = table.Column<string>(type: "nvarchar(255)", maxLength: 255, nullable: true),
-                    TargetValue = table.Column<int>(type: "int", nullable: false)
+                    TargetValue = table.Column<int>(type: "int", nullable: false),
+                    DurationDays = table.Column<int>(type: "int", nullable: false),
+                    IsActive = table.Column<bool>(type: "bit", nullable: false),
+                    CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_Tasks", x => x.Id);
+                    table.PrimaryKey("PK_Missions", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_Tasks_TaskTypes_TaskTypeId",
-                        column: x => x.TaskTypeId,
-                        principalTable: "TaskTypes",
+                        name: "FK_Missions_MissionTypes_MissionTypeId",
+                        column: x => x.MissionTypeId,
+                        principalTable: "MissionTypes",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
@@ -301,52 +303,55 @@ namespace FeeloryBackend.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "TaskRewards",
+                name: "MissionRewards",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    TaskId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    MissionId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     PackageId = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_TaskRewards", x => x.Id);
+                    table.PrimaryKey("PK_MissionRewards", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_TaskRewards_EmotePackages_PackageId",
+                        name: "FK_MissionRewards_EmotePackages_PackageId",
                         column: x => x.PackageId,
                         principalTable: "EmotePackages",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_TaskRewards_Tasks_TaskId",
-                        column: x => x.TaskId,
-                        principalTable: "Tasks",
+                        name: "FK_MissionRewards_Missions_MissionId",
+                        column: x => x.MissionId,
+                        principalTable: "Missions",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                 });
 
             migrationBuilder.CreateTable(
-                name: "UserTaskProgresses",
+                name: "UserMissions",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    TaskId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    MissionId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     CurrentValue = table.Column<int>(type: "int", nullable: false),
-                    IsCompleted = table.Column<bool>(type: "bit", nullable: false),
-                    CompletedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
+                    Status = table.Column<int>(type: "int", nullable: false),
+                    StartedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    ExpiredAt = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    CompletedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
+                    RewardClaimedAt = table.Column<DateTime>(type: "datetime2", nullable: true)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_UserTaskProgresses", x => x.Id);
+                    table.PrimaryKey("PK_UserMissions", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_UserTaskProgresses_Tasks_TaskId",
-                        column: x => x.TaskId,
-                        principalTable: "Tasks",
+                        name: "FK_UserMissions_Missions_MissionId",
+                        column: x => x.MissionId,
+                        principalTable: "Missions",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Restrict);
                     table.ForeignKey(
-                        name: "FK_UserTaskProgresses_Users_UserId",
+                        name: "FK_UserMissions_Users_UserId",
                         column: x => x.UserId,
                         principalTable: "Users",
                         principalColumn: "Id",
@@ -515,6 +520,45 @@ namespace FeeloryBackend.Data.Migrations
                         onDelete: ReferentialAction.Restrict);
                 });
 
+            migrationBuilder.CreateTable(
+                name: "UserMissionReactionHistories",
+                columns: table => new
+                {
+                    Id = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    UserId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    MissionId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    PostId = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    ReactorId = table.Column<Guid>(type: "uniqueidentifier", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_UserMissionReactionHistories", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_UserMissionReactionHistories_Missions_MissionId",
+                        column: x => x.MissionId,
+                        principalTable: "Missions",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_UserMissionReactionHistories_Posts_PostId",
+                        column: x => x.PostId,
+                        principalTable: "Posts",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_UserMissionReactionHistories_Users_ReactorId",
+                        column: x => x.ReactorId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                    table.ForeignKey(
+                        name: "FK_UserMissionReactionHistories_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Restrict);
+                });
+
             migrationBuilder.CreateIndex(
                 name: "IX_DayShareFeeds_DayShareId",
                 table: "DayShareFeeds",
@@ -600,6 +644,28 @@ namespace FeeloryBackend.Data.Migrations
                 unique: true);
 
             migrationBuilder.CreateIndex(
+                name: "IX_MissionRewards_MissionId_PackageId",
+                table: "MissionRewards",
+                columns: new[] { "MissionId", "PackageId" },
+                unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MissionRewards_PackageId",
+                table: "MissionRewards",
+                column: "PackageId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Missions_MissionTypeId",
+                table: "Missions",
+                column: "MissionTypeId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_MissionTypes_MetricKey",
+                table: "MissionTypes",
+                column: "MetricKey",
+                unique: true);
+
+            migrationBuilder.CreateIndex(
                 name: "IX_Notifications_ActorId",
                 table: "Notifications",
                 column: "ActorId");
@@ -672,28 +738,6 @@ namespace FeeloryBackend.Data.Migrations
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_TaskRewards_PackageId",
-                table: "TaskRewards",
-                column: "PackageId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_TaskRewards_TaskId_PackageId",
-                table: "TaskRewards",
-                columns: new[] { "TaskId", "PackageId" },
-                unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Tasks_TaskTypeId",
-                table: "Tasks",
-                column: "TaskTypeId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_TaskTypes_MetricKey",
-                table: "TaskTypes",
-                column: "MetricKey",
-                unique: true);
-
-            migrationBuilder.CreateIndex(
                 name: "IX_UserLoginHistories_LoginDate",
                 table: "UserLoginHistories",
                 column: "LoginDate");
@@ -702,6 +746,39 @@ namespace FeeloryBackend.Data.Migrations
                 name: "IX_UserLoginHistories_UserId",
                 table: "UserLoginHistories",
                 column: "UserId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserMissionReactionHistories_MissionId",
+                table: "UserMissionReactionHistories",
+                column: "MissionId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserMissionReactionHistories_PostId",
+                table: "UserMissionReactionHistories",
+                column: "PostId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserMissionReactionHistories_ReactorId",
+                table: "UserMissionReactionHistories",
+                column: "ReactorId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserMissionReactionHistories_UserId_MissionId_PostId_ReactorId",
+                table: "UserMissionReactionHistories",
+                columns: new[] { "UserId", "MissionId", "PostId", "ReactorId" },
+                unique: true,
+                filter: "[ReactorId] IS NOT NULL");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserMissions_MissionId",
+                table: "UserMissions",
+                column: "MissionId");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_UserMissions_UserId_MissionId",
+                table: "UserMissions",
+                columns: new[] { "UserId", "MissionId" },
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_UserPackages_PackageId",
@@ -730,17 +807,6 @@ namespace FeeloryBackend.Data.Migrations
                 table: "Users",
                 column: "Username",
                 unique: true);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_UserTaskProgresses_TaskId",
-                table: "UserTaskProgresses",
-                column: "TaskId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_UserTaskProgresses_UserId_TaskId",
-                table: "UserTaskProgresses",
-                columns: new[] { "UserId", "TaskId" },
-                unique: true);
         }
 
         /// <inheritdoc />
@@ -765,6 +831,9 @@ namespace FeeloryBackend.Data.Migrations
                 name: "Friends");
 
             migrationBuilder.DropTable(
+                name: "MissionRewards");
+
+            migrationBuilder.DropTable(
                 name: "Notifications");
 
             migrationBuilder.DropTable(
@@ -777,16 +846,16 @@ namespace FeeloryBackend.Data.Migrations
                 name: "Reactions");
 
             migrationBuilder.DropTable(
-                name: "TaskRewards");
-
-            migrationBuilder.DropTable(
                 name: "UserLoginHistories");
 
             migrationBuilder.DropTable(
-                name: "UserPackages");
+                name: "UserMissionReactionHistories");
 
             migrationBuilder.DropTable(
-                name: "UserTaskProgresses");
+                name: "UserMissions");
+
+            migrationBuilder.DropTable(
+                name: "UserPackages");
 
             migrationBuilder.DropTable(
                 name: "DayShares");
@@ -795,10 +864,10 @@ namespace FeeloryBackend.Data.Migrations
                 name: "Posts");
 
             migrationBuilder.DropTable(
-                name: "EmotePackages");
+                name: "Missions");
 
             migrationBuilder.DropTable(
-                name: "Tasks");
+                name: "EmotePackages");
 
             migrationBuilder.DropTable(
                 name: "Emotes");
@@ -807,7 +876,7 @@ namespace FeeloryBackend.Data.Migrations
                 name: "Users");
 
             migrationBuilder.DropTable(
-                name: "TaskTypes");
+                name: "MissionTypes");
         }
     }
 }

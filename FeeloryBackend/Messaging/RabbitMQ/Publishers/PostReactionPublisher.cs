@@ -1,4 +1,4 @@
-using FeeloryBackend.Messaging.RabbitMQ.Messages;
+using FeeloryBackend.Messaging.RabbitMQ.Messages.Reactions;
 using FeeloryBackend.Messaging.RabbitMQ.Routing;
 
 namespace FeeloryBackend.Messaging.RabbitMQ.Publishers;

@@ -1,6 +1,6 @@
 using FeeloryBackend.Commons;
 using FeeloryBackend.Data;
-using FeeloryBackend.Messaging.RabbitMQ.Messages;
+using FeeloryBackend.Messaging.RabbitMQ.Messages.Reactions;
 using FeeloryBackend.Messaging.RabbitMQ.Publishers;
 using FeeloryBackend.Models.DTOs.User;
 using FeeloryBackend.Models.DTOs.Emote;

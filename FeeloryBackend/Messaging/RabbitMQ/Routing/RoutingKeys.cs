@@ -17,4 +17,7 @@ public static class RoutingKeys
     
     // Reaction
     public const string PostReactionAdded = "post.reaction_added";
+    
+    // Auth
+    public const string LoginHeartbeat = "login.heartbeat";
 }

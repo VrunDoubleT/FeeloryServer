@@ -1,4 +1,4 @@
-namespace FeeloryBackend.Messaging.RabbitMQ.Messages;
+namespace FeeloryBackend.Messaging.RabbitMQ.Messages.Reactions;
 
 public class PostReactionAddedMessage
 {

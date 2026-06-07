@@ -1,5 +1,7 @@
 using FeeloryBackend.Messaging.RabbitMQ.Consumers.DayShareFeeds;
 using FeeloryBackend.Messaging.RabbitMQ.Consumers.Email;
+using FeeloryBackend.Messaging.RabbitMQ.Consumers.Histories;
+using FeeloryBackend.Messaging.RabbitMQ.Consumers.Missions;
 using FeeloryBackend.Messaging.RabbitMQ.Consumers.Notifications.Consumers;
 using FeeloryBackend.Messaging.RabbitMQ.Consumers.PostFeeds;
 
@@ -29,6 +31,7 @@ public static class RabbitMQExtensions
         services.AddSingleton<PostReactionPublisher>();
         services.AddSingleton<DaySharePublisher>();
         services.AddSingleton<NotificationPublisher>();
+        services.AddSingleton<HeartbeatPublisher>();
         
         // Consumers (Background Services)
         // Email
@@ -51,9 +54,12 @@ public static class RabbitMQExtensions
         services.AddHostedService<FriendRequestAcceptedNotificationConsumer>();
         services.AddHostedService<MissionCompletedNotificationConsumer>();
         services.AddHostedService<GiftReceivedNotificationConsumer>();
-        
-        // services.AddHostedService<ReactionNotificationConsumer>();
-
+        // Missions
+        services.AddHostedService<DayShareMissionConsumer>();
+        services.AddHostedService<ReactionSentMissionConsumer>();
+        services.AddHostedService<ReactionReceivedMissionConsumer>();
+        services.AddHostedService<LoginMissionConsumer>();
+        services.AddHostedService<LoginHistoryConsumer>();
         return services;
     }
 }

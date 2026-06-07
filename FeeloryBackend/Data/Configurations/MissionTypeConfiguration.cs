@@ -1,16 +1,17 @@
-using FeeloryBackend.Models.Entities;
-
 namespace FeeloryBackend.Data.Configurations;
 
+using FeeloryBackend.Models.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-public class TaskTypeConfiguration : IEntityTypeConfiguration<TaskType>
+public class MissionTypeConfiguration
+    : IEntityTypeConfiguration<MissionType>
 {
-    public void Configure(EntityTypeBuilder<TaskType> builder)
+    public void Configure(
+        EntityTypeBuilder<MissionType> builder)
     {
         // Table mapping
-        builder.ToTable("TaskTypes");
+        builder.ToTable("MissionTypes");
 
         // Primary key
         builder.HasKey(x => x.Id);
@@ -18,23 +19,20 @@ public class TaskTypeConfiguration : IEntityTypeConfiguration<TaskType>
         // Required fields
         builder.Property(x => x.MetricKey)
             .IsRequired()
-            .HasMaxLength(50);
+            .HasMaxLength(100);
 
         builder.Property(x => x.Name)
             .IsRequired()
             .HasMaxLength(100);
-
-        builder.Property(x => x.Description)
-            .HasMaxLength(255);
-
-        // Unique metric key (used for system logic)
+        
+        // Unique metric key
         builder.HasIndex(x => x.MetricKey)
             .IsUnique();
 
-        // Relationship: TaskType → Tasks
-        builder.HasMany(x => x.Tasks)
-            .WithOne(t => t.TaskType)
-            .HasForeignKey(t => t.TaskTypeId)
+        // Relationship: MissionType → Missions
+        builder.HasMany(x => x.Missions)
+            .WithOne(t => t.MissionType)
+            .HasForeignKey(t => t.MissionTypeId)
             .OnDelete(DeleteBehavior.Restrict);
     }
 }

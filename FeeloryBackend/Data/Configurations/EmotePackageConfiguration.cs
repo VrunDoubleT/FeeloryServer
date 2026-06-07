@@ -43,11 +43,5 @@ public class EmotePackageConfiguration : IEntityTypeConfiguration<EmotePackage>
             .WithOne(u => u.Package)
             .HasForeignKey(u => u.PackageId)
             .OnDelete(DeleteBehavior.Restrict);
-
-        // Relationship: Package → TaskRewards
-        builder.HasMany(x => x.TaskRewards)
-            .WithOne(t => t.Package)
-            .HasForeignKey(t => t.PackageId)
-            .OnDelete(DeleteBehavior.Restrict);
     }
 }
