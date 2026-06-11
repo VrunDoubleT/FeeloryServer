@@ -1,4 +1,6 @@
 //using FeeloryBackend.BackgroundServices;
+
+using System.Text.Json.Serialization;
 using FeeloryBackend.Data;
 using FeeloryBackend.Extensions;
 using FeeloryBackend.Messaging.RabbitMQ.Consumers;
@@ -19,7 +21,12 @@ builder.Services.AddScoped<IUserService, UserService>(); //Users
 builder.Services.AddDatabase(builder.Configuration);
 
 // Add controllers
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(
+            new JsonStringEnumConverter());
+    });
 builder.Services.AddApiControllers();
 
 // Customize validation error response format
