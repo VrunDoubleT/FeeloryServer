@@ -41,6 +41,7 @@ public static class DependencyInjectionExtensions
         //Reaction
         services.AddScoped<IReactionService, ReactionService>();
         // Notification
+        services.AddScoped<INotificationService, NotificationService>();
         services.AddScoped<INotificationCreatorService, NotificationCreatorService>();
         // Missions
         services.AddScoped<IMissionProgressService, MissionProgressService>();
