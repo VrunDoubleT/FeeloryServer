@@ -16,7 +16,7 @@ public class NotificationDto
 
     public Guid? TargetId { get; set; }
 
-    public string? DataJson { get; set; }
+    public object? Data { get; set; }
 
     public bool IsRead { get; set; }
 
