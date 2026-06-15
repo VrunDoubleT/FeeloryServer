@@ -32,6 +32,7 @@ public static class RabbitMQExtensions
         services.AddSingleton<DaySharePublisher>();
         services.AddSingleton<NotificationPublisher>();
         services.AddSingleton<HeartbeatPublisher>();
+        services.AddSingleton<UserCreatedPublisher>();
         
         // Consumers (Background Services)
         // Email
@@ -60,6 +61,8 @@ public static class RabbitMQExtensions
         services.AddHostedService<ReactionReceivedMissionConsumer>();
         services.AddHostedService<LoginMissionConsumer>();
         services.AddHostedService<LoginHistoryConsumer>();
+        services.AddHostedService<UserCreatedMissionConsumer>();
+        
         return services;
     }
 }

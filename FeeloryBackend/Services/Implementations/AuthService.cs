@@ -9,6 +9,7 @@ using Microsoft.Extensions.Caching.Distributed;
 using System.Text.Json;
 using FeeloryBackend.Messaging.RabbitMQ.Messages;
 using System.Security.Cryptography;
+using FeeloryBackend.Messaging.RabbitMQ.Messages.Users;
 using FeeloryBackend.Utils;
 
 namespace FeeloryBackend.Services.Implementations;
@@ -18,7 +19,7 @@ public class AuthService : IAuthService
     private readonly AppDbContext _dbContext;
     private readonly IJwtTokenService _jwtTokenService;
     private readonly IPasswordHasherService _passwordHasherService;
-    private readonly IEmailService _emailService;
+    private readonly UserCreatedPublisher _userCreatedPublisher;
     private readonly EmailPublisher _emailPublisher;
     private readonly IDistributedCache _cache;
     private readonly IRefreshTokenService _refreshTokenService;
@@ -34,7 +35,7 @@ public class AuthService : IAuthService
         IJwtTokenService jwtTokenService,
         EmailPublisher emailPublisher,
         IPasswordHasherService passwordHasherService,
-        IEmailService emailService,
+        UserCreatedPublisher userCreatedPublisher,
         IDistributedCache cache,
         IRefreshTokenService refreshTokenService,
         GenerateUniqueUserName generateUniqueUserName)
@@ -42,7 +43,7 @@ public class AuthService : IAuthService
         _dbContext = dbContext;
         _jwtTokenService = jwtTokenService;
         _passwordHasherService = passwordHasherService;
-        _emailService = emailService;
+        _userCreatedPublisher = userCreatedPublisher;
         _emailPublisher = emailPublisher;
         _cache = cache;
         _refreshTokenService = refreshTokenService;
@@ -126,6 +127,11 @@ public class AuthService : IAuthService
 
         await _dbContext.Users.AddAsync(newUser);
         await _dbContext.SaveChangesAsync();
+
+        await _userCreatedPublisher.PublishUserCreatedAsync(new UserCreatedMessage()
+        {
+            UserId = newUser.Id
+        });
 
         await _cache.RemoveAsync($"register:otp:{normalizedEmail}");
         await _cache.RemoveAsync($"register:data:{normalizedEmail}");

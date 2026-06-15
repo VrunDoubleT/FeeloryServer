@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FeeloryBackend.Data.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260607161154_InitialCreate")]
+    [Migration("20260615082434_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />

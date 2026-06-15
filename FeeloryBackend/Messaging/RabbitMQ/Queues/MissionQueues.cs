@@ -11,4 +11,6 @@ public static class MissionQueues
     public const string ReactionSent = "mission.reaction.sent";
 
     public const string ReactionReceived = "mission.reaction.received";
+    
+    public const string UserCreated = "mission.user.created";
 }

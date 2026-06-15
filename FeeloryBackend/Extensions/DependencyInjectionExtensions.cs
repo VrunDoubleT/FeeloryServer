@@ -46,6 +46,7 @@ public static class DependencyInjectionExtensions
         // Missions
         services.AddScoped<IMissionProgressService, MissionProgressService>();
         services.AddScoped<IMissionService, MissionService>();
+        services.AddScoped<IMissionInitializationService, MissionInitializationService>();
         // Heartbeat
         services.AddScoped<IHeartbeatService, HeartbeatService>();
         

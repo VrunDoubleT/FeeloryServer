@@ -20,4 +20,7 @@ public static class RoutingKeys
     
     // Auth
     public const string LoginHeartbeat = "login.heartbeat";
+    
+    // User
+    public const string UserCreated = "user.created";
 }
