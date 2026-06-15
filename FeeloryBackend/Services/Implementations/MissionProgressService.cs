@@ -1,5 +1,8 @@
 using FeeloryBackend.Constants;
 using FeeloryBackend.Data;
+using FeeloryBackend.Messaging.RabbitMQ;
+using FeeloryBackend.Messaging.RabbitMQ.Messages;
+using FeeloryBackend.Messaging.RabbitMQ.Publishers;
 using FeeloryBackend.Models.Entities;
 using FeeloryBackend.Models.Enums;
 using FeeloryBackend.Services.Interfaces;
@@ -10,10 +13,12 @@ namespace FeeloryBackend.Services.Implementations;
 public class MissionProgressService : IMissionProgressService
 {
     private readonly AppDbContext _context;
+    private readonly NotificationPublisher _notificationPublisher;
 
-    public MissionProgressService(AppDbContext context)
+    public MissionProgressService(AppDbContext context, NotificationPublisher notificationPublisher)
     {
         _context = context;
+        _notificationPublisher = notificationPublisher;
     }
 
     public async Task ProcessLoginAsync(Guid userId)
@@ -38,6 +43,12 @@ public class MissionProgressService : IMissionProgressService
                 mission.CurrentValue = mission.Mission.TargetValue;
                 mission.Status = MissionStatus.Completed;
                 mission.CompletedAt ??= DateTime.UtcNow;
+
+                await _notificationPublisher.PublishMissionCompletedAsync(new MissionCompletedMessage()
+                {
+                    UserId = userId,
+                    MissionId = mission.MissionId,
+                });
             }
         }
 
@@ -88,6 +99,12 @@ public class MissionProgressService : IMissionProgressService
             {
                 mission.Status = MissionStatus.Completed;
                 mission.CompletedAt = DateTime.UtcNow;
+                
+                await _notificationPublisher.PublishMissionCompletedAsync(new MissionCompletedMessage()
+                {
+                    UserId = userId,
+                    MissionId = mission.MissionId,
+                });
             }
         }
 
@@ -137,6 +154,12 @@ public class MissionProgressService : IMissionProgressService
             {
                 mission.Status = MissionStatus.Completed;
                 mission.CompletedAt = DateTime.UtcNow;
+                
+                await _notificationPublisher.PublishMissionCompletedAsync(new MissionCompletedMessage()
+                {
+                    UserId = userId,
+                    MissionId = mission.MissionId,
+                });
             }
         }
 
@@ -202,6 +225,12 @@ public class MissionProgressService : IMissionProgressService
                 mission.CurrentValue = mission.Mission.TargetValue;
                 mission.Status = MissionStatus.Completed;
                 mission.CompletedAt ??= DateTime.UtcNow;
+                
+                await _notificationPublisher.PublishMissionCompletedAsync(new MissionCompletedMessage()
+                {
+                    UserId = postOwnerId,
+                    MissionId = mission.MissionId,
+                });
             }
         }
 

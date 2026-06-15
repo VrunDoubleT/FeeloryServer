@@ -7,7 +7,4 @@ public class MissionCompletedMessage
 
     // Completed mission identifier
     public Guid MissionId { get; set; }
-
-    // Reward amount
-    public int RewardCoin { get; set; }
 }

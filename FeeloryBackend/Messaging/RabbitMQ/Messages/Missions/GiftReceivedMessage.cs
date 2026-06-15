@@ -6,8 +6,5 @@ public class GiftReceivedMessage
     public Guid UserId { get; set; }
 
     // Gift identifier
-    public Guid GiftId { get; set; }
-
-    // Gift name
-    public string GiftName { get; set; } = null!;
+    public Guid MissionId { get; set; }
 }

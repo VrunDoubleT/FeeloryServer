@@ -1,5 +1,7 @@
 ﻿using FeeloryBackend.Commons;
 using FeeloryBackend.Data;
+using FeeloryBackend.Messaging.RabbitMQ.Messages;
+using FeeloryBackend.Messaging.RabbitMQ.Publishers;
 using FeeloryBackend.Models.DTOs.Emote;
 using FeeloryBackend.Models.DTOs.Task;
 using FeeloryBackend.Models.Entities;
@@ -12,10 +14,12 @@ namespace FeeloryBackend.Services.Implementations;
 public class MissionService : IMissionService
 {
     private readonly AppDbContext _db;
+    private readonly NotificationPublisher _notificationPublisher;
 
-    public MissionService(AppDbContext db)
+    public MissionService(AppDbContext db, NotificationPublisher notificationPublisher)
     {
         _db = db;
+        _notificationPublisher = notificationPublisher;
     }
     
     // Get mission of current user
@@ -176,6 +180,13 @@ public class MissionService : IMissionService
 
         userMission.Status = MissionStatus.Claimed;
         userMission.RewardClaimedAt = DateTime.UtcNow;
+        
+        await _notificationPublisher.PublishGiftReceivedAsync(new GiftReceivedMessage()
+        {
+            UserId = userId,
+            MissionId = missionId,
+        });
+        
         await _db.SaveChangesAsync();
 
         return Result.Ok();

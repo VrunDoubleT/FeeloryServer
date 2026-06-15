@@ -1,5 +1,3 @@
-using FeeloryBackend.Data;
-using FeeloryBackend.Helpers;
 using FeeloryBackend.Messaging.RabbitMQ.Consumers.Notifications.Factories;
 using FeeloryBackend.Messaging.RabbitMQ.Messages;
 using FeeloryBackend.Messaging.RabbitMQ.Queues;
@@ -7,7 +5,7 @@ using FeeloryBackend.Messaging.RabbitMQ.Routing;
 using FeeloryBackend.Models.Enums;
 using FeeloryBackend.Services.Interfaces;
 
-namespace FeeloryBackend.Messaging.RabbitMQ.Consumers;
+namespace FeeloryBackend.Messaging.RabbitMQ.Consumers.Notifications.Consumers;
 
 public class MissionCompletedNotificationConsumer
     : RabbitMqConsumerBase<MissionCompletedMessage>
@@ -33,11 +31,7 @@ public class MissionCompletedNotificationConsumer
             message.UserId,
             null,
             NotificationType.MissionCompleted,
-            message.MissionId,
-            new
-            {
-                message.RewardCoin
-            });
+            message.MissionId);
 
         await notificationService.CreateAsync(notification);
     }

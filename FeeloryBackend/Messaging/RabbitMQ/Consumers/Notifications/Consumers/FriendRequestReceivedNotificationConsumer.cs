@@ -7,7 +7,7 @@ using FeeloryBackend.Messaging.RabbitMQ.Routing;
 using FeeloryBackend.Models.Enums;
 using FeeloryBackend.Services.Interfaces;
 
-namespace FeeloryBackend.Messaging.RabbitMQ.Consumers;
+namespace FeeloryBackend.Messaging.RabbitMQ.Consumers.Notifications.Consumers;
 
 public class FriendRequestReceivedNotificationConsumer
     : RabbitMqConsumerBase<FriendRequestReceivedMessage>

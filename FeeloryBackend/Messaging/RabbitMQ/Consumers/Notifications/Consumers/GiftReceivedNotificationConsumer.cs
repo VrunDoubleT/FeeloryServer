@@ -1,5 +1,4 @@
-using FeeloryBackend.Data;
-using FeeloryBackend.Helpers;
+
 using FeeloryBackend.Messaging.RabbitMQ.Consumers.Notifications.Factories;
 using FeeloryBackend.Messaging.RabbitMQ.Messages;
 using FeeloryBackend.Messaging.RabbitMQ.Queues;
@@ -7,7 +6,7 @@ using FeeloryBackend.Messaging.RabbitMQ.Routing;
 using FeeloryBackend.Models.Enums;
 using FeeloryBackend.Services.Interfaces;
 
-namespace FeeloryBackend.Messaging.RabbitMQ.Consumers;
+namespace FeeloryBackend.Messaging.RabbitMQ.Consumers.Notifications.Consumers;
 
 public class GiftReceivedNotificationConsumer
     : RabbitMqConsumerBase<GiftReceivedMessage>
@@ -33,11 +32,7 @@ public class GiftReceivedNotificationConsumer
             message.UserId,
             null,
             NotificationType.GiftReceived,
-            message.GiftId,
-            new
-            {
-                message.GiftName
-            });
+            message.MissionId);
 
         await notificationService.CreateAsync(notification);
     }
