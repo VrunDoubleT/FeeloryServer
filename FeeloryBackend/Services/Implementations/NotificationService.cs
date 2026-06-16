@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
 using FeeloryBackend.Commons;
 using FeeloryBackend.Data;
@@ -55,7 +57,31 @@ public class NotificationService : INotificationService
             nextCursor = CursorHelper.Encode(lastItem.CreatedAt, lastItem.Id);
         }
 
-        // Map DTO
+        // =========================================================
+        // INCLUDE REWARDS
+        // =========================================================
+        var missionIds = notifications
+            .Where(n => n.Type == NotificationType.MissionCompleted && n.TargetId.HasValue)
+            .Select(n => n.TargetId!.Value)
+            .Distinct()
+            .ToList();
+
+        var packageIds = notifications
+            .Where(n => n.Type == NotificationType.GiftReceived && n.TargetId.HasValue)
+            .Select(n => n.TargetId!.Value)
+            .Distinct()
+            .ToList();
+
+        var missionsDict = await _db.Missions
+            .Include(m => m.Rewards)
+                .ThenInclude(r => r.Package)
+            .Where(m => missionIds.Contains(m.Id))
+            .ToDictionaryAsync(m => m.Id);
+
+        var packagesDict = await _db.EmotePackages
+            .Where(p => packageIds.Contains(p.Id))
+            .ToDictionaryAsync(p => p.Id);
+
         var dtos = notifications.Select(n => new NotificationDto
         {
             Id = n.Id,
@@ -63,16 +89,14 @@ public class NotificationService : INotificationService
             Title = GenerateNotificationTitle(n.Type),
             Message = GenerateNotificationMessage(n),
             TargetId = n.TargetId,
-            DataJson = n.DataJson,
+            Data = GenerateNotificationData(n, missionsDict, packagesDict),
             IsRead = n.IsRead,
             CreatedAt = n.CreatedAt
         }).ToList();
 
-        // Count the total number of unread notifications
         int unreadCount = await _db.Notifications
             .CountAsync(n => n.UserId == userId && !n.IsRead);
 
-        // class Response
         var responseData = new NotificationPaginationResponse(
             dtos,
             nextCursor,
@@ -113,18 +137,103 @@ public class NotificationService : INotificationService
     }
 
     // ==========================================
-    // HELPER: Type và Message
+    // HELPER: Dynamic Data Object
+    // ==========================================
+    private object? GenerateNotificationData(
+        Notification notification,
+        Dictionary<Guid, Mission> missionsDict,
+        Dictionary<Guid, EmotePackage> packagesDict)
+    {
+        JsonDocument? dbData = null;
+        if (!string.IsNullOrEmpty(notification.DataJson))
+        {
+            try { dbData = JsonDocument.Parse(notification.DataJson); }
+            catch {}
+        }
+
+        var actorInfo = notification.Actor != null ? new
+        {
+            id = notification.Actor.Id,
+            displayName = notification.Actor.DisplayName,
+            avatarUrl = notification.Actor.AvatarUrl
+        } : null;
+
+        return notification.Type switch
+        {
+            NotificationType.FriendRequestReceived or NotificationType.FriendRequestAccepted => new
+            {
+                user = actorInfo
+            },
+            NotificationType.PostReactionAdded => new
+            {
+                user = actorInfo,
+                postId = notification.TargetId,
+                emoteId = dbData?.RootElement.TryGetProperty("EmoteId", out var emoteProp) == true ? emoteProp.GetString() : null
+            },
+            NotificationType.PostCreated => new
+            {
+                user = actorInfo,
+                postId = notification.TargetId
+            },
+            NotificationType.DayShareCreated => new
+            {
+                user = actorInfo,
+                dayShareId = notification.TargetId
+            },
+            NotificationType.MissionCompleted => new
+            {
+                missionId = notification.TargetId,
+                missionInfo = notification.TargetId.HasValue && missionsDict.TryGetValue(notification.TargetId.Value, out var mission)
+                    ? new
+                    {
+                        name = mission.Name,
+                        description = mission.Description,
+                        rewards = mission.Rewards.Select(r => new
+                        {
+                            packageId = r.PackageId,
+                            packageName = r.Package.Name,
+                            coverUrl = r.Package.CoverUrl
+                        }).ToList()
+                    }
+                    : null
+            },
+            NotificationType.GiftReceived => new
+            {
+                packageId = notification.TargetId,
+                packageInfo = notification.TargetId.HasValue && packagesDict.TryGetValue(notification.TargetId.Value, out var package)
+                    ? new { name = package.Name, coverUrl = package.CoverUrl }
+                    : null,
+                extra = dbData?.RootElement
+            },
+            _ => new { user = actorInfo, extra = dbData?.RootElement }
+        };
+    }
+
+    // ==========================================
+    // HELPER: Mapping
     // ==========================================
     private string GetMappedTypeString(NotificationType type) => type switch
     {
         NotificationType.PostReactionAdded => "reaction",
         NotificationType.DayShareCreated => "dayshare",
-        NotificationType.FriendRequestReceived => "friend_request",
-        NotificationType.FriendRequestAccepted => "friend_request",
-        NotificationType.MissionCompleted => "task_complete",
+        NotificationType.FriendRequestReceived => "friend_request_received",
+        NotificationType.FriendRequestAccepted => "friend_request_accepted",
+        NotificationType.MissionCompleted => "mission_completed",
         NotificationType.PostCreated => "post",
         NotificationType.GiftReceived => "gift",
         _ => "system"
+    };
+
+    private string GenerateNotificationTitle(NotificationType type) => type switch
+    {
+        NotificationType.PostCreated => "New post",
+        NotificationType.DayShareCreated => "New moment",
+        NotificationType.PostReactionAdded => "Post reaction",
+        NotificationType.FriendRequestReceived => "Friend request",
+        NotificationType.FriendRequestAccepted => "New friend",
+        NotificationType.MissionCompleted => "Mission completed",
+        NotificationType.GiftReceived => "System gift",
+        _ => "Notification"
     };
 
     private string GenerateNotificationMessage(Notification notification)
@@ -133,26 +242,14 @@ public class NotificationService : INotificationService
 
         return notification.Type switch
         {
-            NotificationType.PostCreated => $"{actorName} just posted a new article.",
-            NotificationType.DayShareCreated => $"{actorName} just shared a moment.",
-            NotificationType.PostReactionAdded => $"{actorName} They have expressed their feelings about your post.",
-            NotificationType.FriendRequestReceived => $"{actorName} They have expressed their feelings about your post.",
-            NotificationType.FriendRequestAccepted => $"{actorName} I have accepted your friend request.",
-            NotificationType.MissionCompleted => "Congratulations! You have completed a task.",
+            NotificationType.PostCreated => $"{actorName} just published a new post.",
+            NotificationType.DayShareCreated => $"{actorName} just shared a new moment.",
+            NotificationType.PostReactionAdded => $"{actorName} reacted to your post.",
+            NotificationType.FriendRequestReceived => $"{actorName} sent you a friend request.",
+            NotificationType.FriendRequestAccepted => $"{actorName} accepted your friend request.",
+            NotificationType.MissionCompleted => "Congratulations! You have completed a mission.",
             NotificationType.GiftReceived => "You have just received a gift from the system.",
             _ => "You have a new notification."
         };
     }
-
-    private string GenerateNotificationTitle(NotificationType type) => type switch
-    {
-        NotificationType.PostCreated => "New article",
-        NotificationType.DayShareCreated => "New moment",
-        NotificationType.PostReactionAdded => "Article interaction",
-        NotificationType.FriendRequestReceived => "Friend invitation",
-        NotificationType.FriendRequestAccepted => "New friends",
-        NotificationType.MissionCompleted => "Mission completed",
-        NotificationType.GiftReceived => "System gift",
-        _ => "Notification"
-    };
 }
