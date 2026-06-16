@@ -24,7 +24,7 @@ public class NotificationService : INotificationService
         _db = db;
     }
 
-    public async Task<Result<NotificationPaginationResponse>> GetByUserAsync(Guid userId, CursorPaginationRequest request)
+    public async Task<Result<NotificationListDto>> GetByUserAsync(Guid userId, CursorPaginationRequest request)
     {
         var query = _db.Notifications
             .AsNoTracking()
@@ -58,30 +58,34 @@ public class NotificationService : INotificationService
         }
 
         // =========================================================
-        // INCLUDE REWARDS
+        // GET ALL ATTACHED INFORMATION READY
         // =========================================================
-        var missionIds = notifications
-            .Where(n => n.Type == NotificationType.MissionCompleted && n.TargetId.HasValue)
-            .Select(n => n.TargetId!.Value)
-            .Distinct()
-            .ToList();
 
-        var packageIds = notifications
-            .Where(n => n.Type == NotificationType.GiftReceived && n.TargetId.HasValue)
-            .Select(n => n.TargetId!.Value)
-            .Distinct()
-            .ToList();
+        var missionIds = notifications.Where(n => n.Type == NotificationType.MissionCompleted && n.TargetId.HasValue).Select(n => n.TargetId!.Value).Distinct().ToList();
+        var packageIds = notifications.Where(n => n.Type == NotificationType.GiftReceived && n.TargetId.HasValue).Select(n => n.TargetId!.Value).Distinct().ToList();
+        var postIds = notifications.Where(n => (n.Type == NotificationType.PostCreated || n.Type == NotificationType.PostReactionAdded) && n.TargetId.HasValue).Select(n => n.TargetId!.Value).Distinct().ToList();
+        var dayShareIds = notifications.Where(n => n.Type == NotificationType.DayShareCreated && n.TargetId.HasValue).Select(n => n.TargetId!.Value).Distinct().ToList();
 
-        var missionsDict = await _db.Missions
-            .Include(m => m.Rewards)
-                .ThenInclude(r => r.Package)
-            .Where(m => missionIds.Contains(m.Id))
-            .ToDictionaryAsync(m => m.Id);
+        var emoteIds = new List<Guid>();
+        foreach (var n in notifications.Where(x => x.Type == NotificationType.PostReactionAdded && !string.IsNullOrWhiteSpace(x.DataJson)))
+        {
+            try
+            {
+                var doc = JsonDocument.Parse(n.DataJson!);
+                if (doc.RootElement.TryGetProperty("EmoteId", out var prop) && Guid.TryParse(prop.GetString(), out var eId))
+                    emoteIds.Add(eId);
+            }
+            catch {}
+        }
+        emoteIds = emoteIds.Distinct().ToList();
 
-        var packagesDict = await _db.EmotePackages
-            .Where(p => packageIds.Contains(p.Id))
-            .ToDictionaryAsync(p => p.Id);
+        var missionsDict = await _db.Missions.Include(m => m.Rewards).ThenInclude(r => r.Package).Where(m => missionIds.Contains(m.Id)).ToDictionaryAsync(m => m.Id);
+        var packagesDict = await _db.EmotePackages.Where(p => packageIds.Contains(p.Id)).ToDictionaryAsync(p => p.Id);
+        var postsDict = await _db.Posts.Where(p => postIds.Contains(p.Id)).ToDictionaryAsync(p => p.Id);
+        var daySharesDict = await _db.DayShares.Where(d => dayShareIds.Contains(d.Id)).ToDictionaryAsync(d => d.Id);
+        var emotesDict = await _db.Emotes.Where(e => emoteIds.Contains(e.Id)).ToDictionaryAsync(e => e.Id);
 
+        // Map DTO
         var dtos = notifications.Select(n => new NotificationDto
         {
             Id = n.Id,
@@ -89,7 +93,7 @@ public class NotificationService : INotificationService
             Title = GenerateNotificationTitle(n.Type),
             Message = GenerateNotificationMessage(n),
             TargetId = n.TargetId,
-            Data = GenerateNotificationData(n, missionsDict, packagesDict),
+            Data = GenerateNotificationData(n, missionsDict, packagesDict, postsDict, daySharesDict, emotesDict),
             IsRead = n.IsRead,
             CreatedAt = n.CreatedAt
         }).ToList();
@@ -97,14 +101,15 @@ public class NotificationService : INotificationService
         int unreadCount = await _db.Notifications
             .CountAsync(n => n.UserId == userId && !n.IsRead);
 
-        var responseData = new NotificationPaginationResponse(
-            dtos,
-            nextCursor,
-            hasNextPage,
-            unreadCount
-        );
+        var responseData = new NotificationListDto
+        {
+            UnreadCount = unreadCount,
+            Notifications = dtos,
+            NextCursor = nextCursor,
+            HasNextPage = hasNextPage
+        };
 
-        return Result<NotificationPaginationResponse>.Ok(responseData);
+        return Result<NotificationListDto>.Ok(responseData);
     }
 
     public async Task<Result> MarkAsReadAsync(Guid userId, Guid notificationId)
@@ -137,12 +142,24 @@ public class NotificationService : INotificationService
     }
 
     // ==========================================
-    // HELPER: Dynamic Data Object
+    // HELPER
+    // ==========================================
+    private string TruncateText(string? text, int maxLength = 50)
+    {
+        if (string.IsNullOrEmpty(text)) return "";
+        return text.Length <= maxLength ? text : text.Substring(0, maxLength) + "...";
+    }
+
+    // ==========================================
+    // HELPER:Object Data
     // ==========================================
     private object? GenerateNotificationData(
         Notification notification,
         Dictionary<Guid, Mission> missionsDict,
-        Dictionary<Guid, EmotePackage> packagesDict)
+        Dictionary<Guid, EmotePackage> packagesDict,
+        Dictionary<Guid, Post> postsDict,
+        Dictionary<Guid, DayShare> daySharesDict,
+        Dictionary<Guid, Emote> emotesDict)
     {
         JsonDocument? dbData = null;
         if (!string.IsNullOrEmpty(notification.DataJson))
@@ -158,59 +175,98 @@ public class NotificationService : INotificationService
             avatarUrl = notification.Actor.AvatarUrl
         } : null;
 
+        Guid? parsedEmoteId = null;
+        if (dbData?.RootElement.TryGetProperty("EmoteId", out var emoteProp) == true && Guid.TryParse(emoteProp.GetString(), out var eId))
+        {
+            parsedEmoteId = eId;
+        }
+
         return notification.Type switch
         {
             NotificationType.FriendRequestReceived or NotificationType.FriendRequestAccepted => new
             {
                 user = actorInfo
             },
+
             NotificationType.PostReactionAdded => new
             {
                 user = actorInfo,
-                postId = notification.TargetId,
-                emoteId = dbData?.RootElement.TryGetProperty("EmoteId", out var emoteProp) == true ? emoteProp.GetString() : null
+                post = notification.TargetId.HasValue && postsDict.TryGetValue(notification.TargetId.Value, out var postReacted) ? new
+                {
+                    id = postReacted.Id,
+                    description = postReacted.Description,
+                    imageUrl = postReacted.ImageUrl,
+                    privacy = postReacted.Privacy,
+                    createdAt = postReacted.CreatedAt
+                } : null,
+                emote = parsedEmoteId.HasValue && emotesDict.TryGetValue(parsedEmoteId.Value, out var emote) ? new
+                {
+                    id = emote.Id,
+                    name = emote.Name,
+                    imageUrl = emote.ImageUrl
+                } : null
             },
+
             NotificationType.PostCreated => new
             {
                 user = actorInfo,
-                postId = notification.TargetId
+                post = notification.TargetId.HasValue && postsDict.TryGetValue(notification.TargetId.Value, out var postCreated) ? new
+                {
+                    id = postCreated.Id,
+                    description = postCreated.Description,
+                    imageUrl = postCreated.ImageUrl,
+                    privacy = postCreated.Privacy,
+                    createdAt = postCreated.CreatedAt
+                } : null
             },
+
             NotificationType.DayShareCreated => new
             {
                 user = actorInfo,
-                dayShareId = notification.TargetId
+                dayShare = notification.TargetId.HasValue && daySharesDict.TryGetValue(notification.TargetId.Value, out var dayShare) ? new
+                {
+                    id = dayShare.Id,
+                    description = dayShare.Description,
+                    shareType = dayShare.ShareType,
+                    createdAt = dayShare.SharedDate
+                } : null
             },
+
             NotificationType.MissionCompleted => new
             {
-                missionId = notification.TargetId,
-                missionInfo = notification.TargetId.HasValue && missionsDict.TryGetValue(notification.TargetId.Value, out var mission)
-                    ? new
+                mission = notification.TargetId.HasValue && missionsDict.TryGetValue(notification.TargetId.Value, out var mission) ? new
+                {
+                    id = mission.Id,
+                    name = mission.Name,
+                    description = mission.Description,
+                    targetValue = mission.TargetValue,
+                    rewards = mission.Rewards.Select(r => new
                     {
-                        name = mission.Name,
-                        description = mission.Description,
-                        rewards = mission.Rewards.Select(r => new
-                        {
-                            packageId = r.PackageId,
-                            packageName = r.Package.Name,
-                            coverUrl = r.Package.CoverUrl
-                        }).ToList()
-                    }
-                    : null
+                        packageId = r.PackageId,
+                        packageName = r.Package.Name,
+                        coverUrl = r.Package.CoverUrl
+                    }).ToList()
+                } : null
             },
+
             NotificationType.GiftReceived => new
             {
-                packageId = notification.TargetId,
-                packageInfo = notification.TargetId.HasValue && packagesDict.TryGetValue(notification.TargetId.Value, out var package)
-                    ? new { name = package.Name, coverUrl = package.CoverUrl }
-                    : null,
+                package = notification.TargetId.HasValue && packagesDict.TryGetValue(notification.TargetId.Value, out var package) ? new
+                {
+                    id = package.Id,
+                    name = package.Name,
+                    description = package.Description,
+                    coverUrl = package.CoverUrl
+                } : null,
                 extra = dbData?.RootElement
             },
+
             _ => new { user = actorInfo, extra = dbData?.RootElement }
         };
     }
 
     // ==========================================
-    // HELPER: Mapping
+    // HELPER: Mapping Title & Message
     // ==========================================
     private string GetMappedTypeString(NotificationType type) => type switch
     {

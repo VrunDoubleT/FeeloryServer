@@ -2,6 +2,7 @@ using System;
 using System.Security.Claims;
 using System.Threading.Tasks;
 using FeeloryBackend.Models.DTOs.Commons;
+using FeeloryBackend.Models.DTOs.Notification;
 using FeeloryBackend.Responses;
 using FeeloryBackend.Services.Interfaces;
 using Microsoft.AspNetCore.Authorization;
@@ -30,7 +31,7 @@ public class NotificationsController : ControllerBase
         var result = await _notificationService.GetByUserAsync(CurrentUserId, request);
 
         return result.IsSuccess
-            ? Ok(result.Data)
+            ? Ok(new ApiResponse<NotificationListDto>(result.Data!, "Retrieved notifications successfully"))
             : BadRequest(new ApiErrorResponse(result.Error!));
     }
 
