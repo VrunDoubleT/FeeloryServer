@@ -1,14 +1,17 @@
-﻿FROM mcr.microsoft.com/dotnet/sdk:8.0
-
-WORKDIR /app
-
-COPY FeeloryBackend/FeeloryBackend.csproj FeeloryBackend/
-RUN dotnet restore FeeloryBackend/FeeloryBackend.csproj
+﻿FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
 
 COPY . .
 
-WORKDIR /app/FeeloryBackend
+RUN dotnet restore
+RUN dotnet publish -c Release -o /app/publish
+
+FROM mcr.microsoft.com/dotnet/aspnet:8.0
+
+WORKDIR /app
+
+COPY --from=build /app/publish .
 
 EXPOSE 8080
 
-CMD ["dotnet", "watch", "run", "--urls", "http://0.0.0.0:8080"]
+ENTRYPOINT ["dotnet", "FeeloryBackend.dll"]
