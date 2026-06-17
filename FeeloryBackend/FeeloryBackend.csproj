@@ -36,7 +36,6 @@
 
     <ItemGroup>
       <Folder Include="Data\Migrations\" />
-      <Folder Include="Filters\" />
     </ItemGroup>
 
 </Project>
