@@ -55,7 +55,7 @@ public class UsersController : ControllerBase
         var result = await _userService.SearchByDisplayNameAsync(CurrentUserId, q, request);
 
         return result.IsSuccess
-            ? Ok(new ApiResponse<CursorPaginationResponse<UserProfileDto>>(result.Data!, "Search completed"))
+            ? Ok(result.Data!)
             : BadRequest(new ApiErrorResponse(result.Error!));
     }
 
@@ -71,7 +71,7 @@ public class UsersController : ControllerBase
         var result = await _userService.SearchByUsernameAsync(CurrentUserId, username, request);
 
         return result.IsSuccess
-            ? Ok(new ApiResponse<CursorPaginationResponse<UserProfileDto>>(result.Data!, "Search completed"))
+            ? Ok(result.Data!)
             : BadRequest(new ApiErrorResponse(result.Error!));
     }
 }

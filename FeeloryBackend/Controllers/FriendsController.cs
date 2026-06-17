@@ -61,7 +61,7 @@ public class FriendsController : ControllerBase
         var result = await _friendService.RemoveFriendAsync(CurrentUserId, friendUserId);
 
         return result.IsSuccess
-            ? Ok(new ApiResponse<object>(null, "Đã xóa bạn bè thành công."))
+            ? Ok(new ApiResponse<object>(null, "Friend removal successful"))
             : BadRequest(new ApiErrorResponse(result.Error!));
     }
 
