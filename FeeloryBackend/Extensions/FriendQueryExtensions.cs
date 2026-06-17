@@ -84,4 +84,29 @@ public static class FriendQueryExtensions
         return query.BetweenUsers(userA, userB)
             .AnyAsync(cancellationToken);
     }
+    public static IQueryable<Guid> GetFriendUserIds(
+        this IQueryable<Friend> query,
+        Guid currentUserId)
+    {
+        return query
+            .AsNoTracking()
+            .Where(f =>
+                f.UserId == currentUserId
+                ||
+                f.FriendId == currentUserId)
+            .Select(f =>
+                f.UserId == currentUserId
+                    ? f.FriendId
+                    : f.UserId);
+    }
+
+    public static Task<List<Guid>> GetFriendUserIdsAsync(
+        this IQueryable<Friend> query,
+        Guid currentUserId,
+        CancellationToken cancellationToken = default)
+    {
+        return query
+            .GetFriendUserIds(currentUserId)
+            .ToListAsync(cancellationToken);
+    }
 }

@@ -1,11 +1,11 @@
 using FeeloryBackend.Models.Entities;
-
-namespace FeeloryBackend.Data.Configurations;
-
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
-public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
+namespace FeeloryBackend.Data.Configurations;
+
+public class NotificationConfiguration
+    : IEntityTypeConfiguration<Notification>
 {
     public void Configure(EntityTypeBuilder<Notification> builder)
     {
@@ -16,43 +16,46 @@ public class NotificationConfiguration : IEntityTypeConfiguration<Notification>
         builder.HasKey(x => x.Id);
 
         // Required fields
-        builder.Property(x => x.UserId).IsRequired();
-        builder.Property(x => x.TypeId).IsRequired();
+        builder.Property(x => x.UserId)
+            .IsRequired();
 
-        builder.Property(x => x.Title)
+        builder.Property(x => x.Type)
             .IsRequired()
-            .HasMaxLength(200);
+            .HasConversion<int>();
 
-        builder.Property(x => x.Message)
-            .HasMaxLength(500);
+        builder.Property(x => x.TargetId);
 
         builder.Property(x => x.DataJson)
             .HasColumnType("nvarchar(max)");
 
         builder.Property(x => x.IsRead)
-            .IsRequired();
+            .IsRequired()
+            .HasDefaultValue(false);
 
         builder.Property(x => x.CreatedAt)
             .HasColumnType("datetime2")
             .IsRequired()
             .HasDefaultValueSql("GETUTCDATE()");
 
-        // Optional read timestamp
         builder.Property(x => x.ReadAt);
 
-        // Index for unread notifications
+        // Indexes
         builder.HasIndex(x => new { x.UserId, x.IsRead });
 
-        // Relationship: Notification → User
+        builder.HasIndex(x => x.CreatedAt);
+
+        builder.HasIndex(x => x.Type);
+
+        // Relationship: Notification -> User (Receiver)
         builder.HasOne(x => x.User)
             .WithMany(u => u.Notifications)
             .HasForeignKey(x => x.UserId)
-            .OnDelete(DeleteBehavior.Restrict);
+            .OnDelete(DeleteBehavior.Cascade);
 
-        // Relationship: Notification → NotificationType
-        builder.HasOne(x => x.Type)
-            .WithMany(t => t.Notifications)
-            .HasForeignKey(x => x.TypeId)
-            .OnDelete(DeleteBehavior.Restrict);
+        // Relationship: Notification -> User (Actor)
+        builder.HasOne(x => x.Actor)
+            .WithMany()
+            .HasForeignKey(x => x.ActorId)
+            .OnDelete(DeleteBehavior.NoAction);
     }
 }

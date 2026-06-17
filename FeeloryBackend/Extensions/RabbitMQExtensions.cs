@@ -1,3 +1,10 @@
+using FeeloryBackend.Messaging.RabbitMQ.Consumers.DayShareFeeds;
+using FeeloryBackend.Messaging.RabbitMQ.Consumers.Email;
+using FeeloryBackend.Messaging.RabbitMQ.Consumers.Histories;
+using FeeloryBackend.Messaging.RabbitMQ.Consumers.Missions;
+using FeeloryBackend.Messaging.RabbitMQ.Consumers.Notifications.Consumers;
+using FeeloryBackend.Messaging.RabbitMQ.Consumers.PostFeeds;
+
 namespace FeeloryBackend.Extensions;
 
 using FeeloryBackend.Messaging.RabbitMQ;
@@ -20,10 +27,42 @@ public static class RabbitMQExtensions
 
         // Publishers
         services.AddSingleton<EmailPublisher>();
-
+        services.AddSingleton<PostPublisher>();
+        services.AddSingleton<PostReactionPublisher>();
+        services.AddSingleton<DaySharePublisher>();
+        services.AddSingleton<NotificationPublisher>();
+        services.AddSingleton<HeartbeatPublisher>();
+        services.AddSingleton<UserCreatedPublisher>();
+        
         // Consumers (Background Services)
+        // Email
         services.AddHostedService<EmailConsumerService>();
-
+        // Post
+        services.AddHostedService<PostCreatedFeedConsumer>();
+        services.AddHostedService<PostDeletedFeedConsumer>();
+        services.AddHostedService<PostUpdatedFeedAddedConsumer>();
+        services.AddHostedService<PostUpdatedFeedRemovedConsumer>();
+        // DayShare
+        services.AddHostedService<DayShareCreatedFeedConsumer>();
+        services.AddHostedService<DayShareDeletedFeedConsumer>();
+        services.AddHostedService<DayShareUpdatedFeedAddedConsumer>();
+        services.AddHostedService<DayShareUpdatedFeedRemovedConsumer>();
+        //Notification
+        services.AddHostedService<PostCreatedNotificationConsumer>();
+        services.AddHostedService<DayShareCreatedNotificationConsumer>();
+        services.AddHostedService<PostReactionNotificationConsumer>();
+        services.AddHostedService<FriendRequestReceivedNotificationConsumer>();
+        services.AddHostedService<FriendRequestAcceptedNotificationConsumer>();
+        services.AddHostedService<MissionCompletedNotificationConsumer>();
+        services.AddHostedService<GiftReceivedNotificationConsumer>();
+        // Missions
+        services.AddHostedService<DayShareMissionConsumer>();
+        services.AddHostedService<ReactionSentMissionConsumer>();
+        services.AddHostedService<ReactionReceivedMissionConsumer>();
+        services.AddHostedService<LoginMissionConsumer>();
+        services.AddHostedService<LoginHistoryConsumer>();
+        services.AddHostedService<UserCreatedMissionConsumer>();
+        
         return services;
     }
 }

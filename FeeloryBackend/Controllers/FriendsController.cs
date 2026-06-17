@@ -74,13 +74,8 @@ public class FriendsController : ControllerBase
             .GetFriendsAsync(CurrentUserId, request);
 
         return result.IsSuccess
-            ? Ok(
-                new ApiResponse<
-                    CursorPaginationResponse<FriendDto>>(
-                    result.Data,
-                    "Friends list retrieved successfully"))
-            : BadRequest(
-                new ApiErrorResponse(result.Error!));
+            ? Ok(result.Data)
+            : BadRequest(new ApiErrorResponse(result.Error!));
     }
 
     // GET api/friends/requests/pending
@@ -94,12 +89,7 @@ public class FriendsController : ControllerBase
                 request);
 
         return result.IsSuccess
-            ? Ok(
-                new ApiResponse<
-                    CursorPaginationResponse<FriendRequestDto>>(
-                    result.Data!,
-                    "Successfully retrieved the friend request list"))
-            : BadRequest(
-                new ApiErrorResponse(result.Error!));
+            ? Ok(result.Data!)
+            : BadRequest(new ApiErrorResponse(result.Error!));
     }
 }

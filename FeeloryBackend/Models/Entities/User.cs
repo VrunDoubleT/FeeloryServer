@@ -20,9 +20,11 @@ public class User
     public ICollection<Reaction> Reactions { get; set; } = new List<Reaction>();
     public ICollection<DayShare> DayShares { get; set; } = new List<DayShare>();
     public ICollection<DayShareViewer> DayShareViewers { get; set; } = new List<DayShareViewer>();
-    public ICollection<UserTaskProgress> TaskProgresses { get; set; } = new List<UserTaskProgress>();
     public ICollection<UserLoginHistory> LoginHistories { get; set; } = new List<UserLoginHistory>();
     public ICollection<Notification> Notifications { get; set; } = new List<Notification>();
+    public ICollection<UserMission> UserMissions { get; set; } = new List<UserMission>();
+    public ICollection<UserMissionReactionHistory> MissionReactionHistories { get; set; } = new List<UserMissionReactionHistory>();
+    public ICollection<UserMissionReactionHistory> ReactedMissionHistories { get; set; } = new List<UserMissionReactionHistory>();
     
     // Tách 2 collection rõ ràng theo canonical direction
     public ICollection<Friend> FriendsAsUser   { get; set; } = [];

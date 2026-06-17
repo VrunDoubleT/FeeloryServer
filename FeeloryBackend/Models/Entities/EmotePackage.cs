@@ -11,5 +11,5 @@ public class EmotePackage
     // Navigation properties
     public ICollection<EmotePackageItem> Items { get; set; } = new List<EmotePackageItem>();
     public ICollection<UserPackage> UserPackages { get; set; } = new List<UserPackage>();
-    public ICollection<TaskReward> TaskRewards { get; set; } = new List<TaskReward>();
+    public ICollection<MissionReward> MissionRewards { get; set; } = new List<MissionReward>();
 }

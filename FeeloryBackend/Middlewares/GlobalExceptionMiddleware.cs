@@ -9,7 +9,7 @@ using FeeloryBackend.Responses;
 public class GlobalExceptionMiddleware
 {
     private readonly RequestDelegate _next;
-
+    
     public GlobalExceptionMiddleware(
         RequestDelegate next,
         ILogger<GlobalExceptionMiddleware> logger)
@@ -29,6 +29,8 @@ public class GlobalExceptionMiddleware
             {
                 throw;
             }
+            
+            Console.WriteLine(ex.Message);
 
             context.Response.Clear();
             context.Response.ContentType = "application/json";

@@ -1,6 +1,5 @@
 using FeeloryBackend.Data.Configurations;
 using FeeloryBackend.Models.Entities;
-using Task = FeeloryBackend.Models.Entities.Task;
 
 namespace FeeloryBackend.Data;
 
@@ -34,6 +33,7 @@ public class AppDbContext : DbContext
     public DbSet<DayShare> DayShares => Set<DayShare>();
     public DbSet<DaySharePost> DaySharePosts => Set<DaySharePost>();
     public DbSet<DayShareViewer> DayShareViewers => Set<DayShareViewer>();
+    public DbSet<DayShareFeed> DayShareFeeds => Set<DayShareFeed>();
 
     // =======================
     // EMOTE SYSTEM
@@ -46,15 +46,15 @@ public class AppDbContext : DbContext
     // NOTIFICATION SYSTEM
     // =======================
     public DbSet<Notification> Notifications => Set<Notification>();
-    public DbSet<NotificationType> NotificationTypes => Set<NotificationType>();
 
-    // =======================
-    // GAMIFICATION / TASK SYSTEM
-    // =======================
-    public DbSet<Task> Tasks => Set<Task>();
-    public DbSet<TaskType> TaskTypes => Set<TaskType>();
-    public DbSet<TaskReward> TaskRewards => Set<TaskReward>();
-    public DbSet<UserTaskProgress> UserTaskProgresses => Set<UserTaskProgress>();
+    // ===============================
+    // GAMIFICATION / MISSION SYSTEM
+    // ===============================
+    public DbSet<Mission> Missions => Set<Mission>();
+    public DbSet<MissionType> MissionTypes => Set<MissionType>();
+    public DbSet<MissionReward> MissionRewards => Set<MissionReward>();
+    public DbSet<UserMission> UserMissions => Set<UserMission>();
+    public DbSet<UserMissionReactionHistory> UserMissionReactionHistories => Set<UserMissionReactionHistory>();
 
     // =======================
     // USER ACTIVITY
@@ -90,7 +90,7 @@ public class AppDbContext : DbContext
         modelBuilder.ApplyConfiguration(new DayShareConfiguration());
         modelBuilder.ApplyConfiguration(new DaySharePostConfiguration());
         modelBuilder.ApplyConfiguration(new DayShareViewerConfiguration());
-
+        modelBuilder.ApplyConfiguration(new DayShareFeedConfiguration()); 
         // =======================
         // EMOTE SYSTEM
         // =======================
@@ -102,15 +102,15 @@ public class AppDbContext : DbContext
         // NOTIFICATION SYSTEM
         // =======================
         modelBuilder.ApplyConfiguration(new NotificationConfiguration());
-        modelBuilder.ApplyConfiguration(new NotificationTypeConfiguration());
 
         // =======================
         // TASK SYSTEM
         // =======================
-        modelBuilder.ApplyConfiguration(new TaskConfiguration());
-        modelBuilder.ApplyConfiguration(new TaskTypeConfiguration());
-        modelBuilder.ApplyConfiguration(new TaskRewardConfiguration());
-        modelBuilder.ApplyConfiguration(new UserTaskProgressConfiguration());
+        modelBuilder.ApplyConfiguration(new MissionConfiguration());
+        modelBuilder.ApplyConfiguration(new MissionTypeConfiguration());
+        modelBuilder.ApplyConfiguration(new MissionRewardConfiguration());
+        modelBuilder.ApplyConfiguration(new UserMissionConfiguration());
+        modelBuilder.ApplyConfiguration(new UserMissionReactionHistoryConfiguration());
 
         // =======================
         // USER ACTIVITY

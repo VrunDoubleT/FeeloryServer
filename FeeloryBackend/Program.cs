@@ -1,19 +1,32 @@
+//using FeeloryBackend.BackgroundServices;
+
+using System.Text.Json.Serialization;
 using FeeloryBackend.Data;
 using FeeloryBackend.Extensions;
+using FeeloryBackend.Messaging.RabbitMQ.Consumers;
 using FeeloryBackend.Middlewares;
+using FeeloryBackend.Services.Implementations;
+using FeeloryBackend.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddEndpointsApiExplorer();
+
+builder.Services.AddScoped<IUserService, UserService>(); //Users
 // builder.Services.AddSwaggerGen();
 
 // Add Database connection
 builder.Services.AddDatabase(builder.Configuration);
 
 // Add controllers
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(
+            new JsonStringEnumConverter());
+    });
 builder.Services.AddApiControllers();
 
 // Customize validation error response format
@@ -53,6 +66,7 @@ using (var scope = app.Services.CreateScope())
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.Migrate();
 }
+
 
 // Global exception middleware
 app.UseGlobalException();

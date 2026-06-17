@@ -18,4 +18,10 @@ public interface IRefreshTokenService
     Task RemoveRefreshTokenAsync(string refreshToken);
 
     Task<RefreshTokenResponse?> RotateRefreshTokenAsync(string oldRefreshToken);
-}
+
+    // Revoke all refresh tokens for a user by incrementing token version
+    Task RevokeAllUserTokensAsync(Guid userId);
+
+    // Get the current token version for a user
+    Task<long> GetCurrentTokenVersionAsync(Guid userId);
+}

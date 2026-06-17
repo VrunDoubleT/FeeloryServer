@@ -1,3 +1,7 @@
+using System;
+using System.Threading.Tasks;
+using FeeloryBackend.Commons;
+using FeeloryBackend.Models.DTOs.Commons;
 using FeeloryBackend.Models.DTOs.Notification;
 
 namespace FeeloryBackend.Services.Interfaces;
@@ -5,11 +9,11 @@ namespace FeeloryBackend.Services.Interfaces;
 public interface INotificationService
 {
     // Get notifications of user
-    Task<List<NotificationDto>> GetByUserAsync(Guid userId);
+    Task<Result<NotificationPaginationResponse>> GetByUserAsync(Guid userId, CursorPaginationRequest request);
 
     // Mark notification as read
-    Task MarkAsReadAsync(Guid notificationId);
+    Task<Result> MarkAsReadAsync(Guid userId, Guid notificationId);
 
     // Mark all as read
-    Task MarkAllAsReadAsync(Guid userId);
+    Task<Result<int>> MarkAllAsReadAsync(Guid userId);
 }

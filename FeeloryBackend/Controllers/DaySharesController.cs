@@ -1,40 +1,98 @@
+using System.Security.Claims;
+using FeeloryBackend.Models.DTOs.Commons;
+using FeeloryBackend.Models.DTOs.DayShare;
+using FeeloryBackend.Responses;
+using FeeloryBackend.Services.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace FeeloryBackend.Controllers;
 
 [ApiController]
 [Route("api/day-shares")]
+[Authorize]
 public class DaySharesController : ControllerBase
 {
-    // Create shared diary for a day
-    [HttpPost]
-    public async Task<IActionResult> Create()
+    private readonly IDayShareService _dayShareService;
+
+    public DaySharesController(IDayShareService dayShareService)
     {
-        // Used to share multiple posts of a specific day
-        return Ok();
-    }
-    
-    // Update existing shared diary for a day
-    [HttpPut("{id}")]
-    public async Task<IActionResult> Update(Guid id)
-    {
-        // Used to update post content
-        return Ok();
+        _dayShareService = dayShareService;
     }
 
-    // Get shared day detail
-    [HttpGet("{id}")]
+    private Guid CurrentUserId =>
+        Guid.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+    [HttpPost]
+    public async Task<IActionResult> Create(
+        [FromBody] CreateDayShareRequestDto dto)
+    {
+        var result = await _dayShareService
+            .CreateAsync(CurrentUserId, dto);
+
+        return result.IsSuccess
+            ? Ok(new ApiResponse<DayShareDto>(result.Data, "DayShare created successfully"))
+            : BadRequest(new ApiErrorResponse(result.Error!));
+    }
+
+    [HttpPatch]
+    public async Task<IActionResult> Update(
+        [FromBody] UpdateDayShareRequestDto dto)
+    {
+        var result = await _dayShareService
+            .UpdateAsync(CurrentUserId, dto);
+
+        return result.IsSuccess
+            ? Ok(new ApiResponse<DayShareDto>(result.Data, "DayShare updated successfully"))
+            : BadRequest(new ApiErrorResponse(result.Error!));
+    }
+
+    [HttpGet("{id:guid}")]
     public async Task<IActionResult> GetById(Guid id)
     {
-        // Used to get full shared day timeline
-        return Ok();
+        var result = await _dayShareService
+            .GetByIdAsync(CurrentUserId, id);
+
+        return result.IsSuccess
+            ? Ok(new ApiResponse<DayShareDetailDto>(
+                result.Data, "Success"))
+            : BadRequest(new ApiErrorResponse(result.Error!));
     }
 
-    // Delete shared day
-    [HttpDelete("{id}")]
+    [HttpDelete("{id:guid}")]
     public async Task<IActionResult> Delete(Guid id)
     {
-        // Used to delete a shared diary day
-        return Ok();
+        var result = await _dayShareService
+            .DeleteAsync(CurrentUserId, id);
+
+        return result.IsSuccess
+            ? Ok(new ApiResponse<object>(
+                null, "DayShare deleted successfully"))
+            : BadRequest(new ApiErrorResponse(result.Error!));
+    }
+
+    [HttpGet("feed")]
+    public async Task<IActionResult> GetFeed(
+        [FromQuery] CursorPaginationRequest request)
+    {
+        var result = await _dayShareService
+            .GetFeedAsync(CurrentUserId, request);
+
+        return result.IsSuccess
+            ? Ok(result.Data)
+            : BadRequest(new ApiErrorResponse(result.Error!));
+    }
+
+    [HttpGet("user/{userId:guid}")]
+    public async Task<IActionResult> GetUserFeed(
+        Guid userId,
+        [FromQuery] CursorPaginationRequest request)
+    {
+        var result = await _dayShareService
+            .GetUserFeedAsync(CurrentUserId, userId, request);
+
+        return result.IsSuccess
+            ? Ok(result.Data)
+            : BadRequest(new ApiErrorResponse(result.Error!));
     }
 }
