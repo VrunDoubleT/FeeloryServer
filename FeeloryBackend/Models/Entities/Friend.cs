@@ -14,15 +14,14 @@ public class Friend
     // Factory method — đảm bảo canonical order, không để caller tự set
     public static Friend Create(Guid userA, Guid userB)
     {
-        var (small, large) = userA.CompareTo(userB) < 0
-            ? (userA, userB)
-            : (userB, userA);
+        if (userA == userB)
+            throw new ArgumentException("Cannot friend yourself.");
 
         return new Friend
         {
             Id = Guid.NewGuid(),
-            UserId = small,
-            FriendId = large,
+            UserId = userA,
+            FriendId = userB,
             CreatedAt = DateTime.UtcNow
         };
     }

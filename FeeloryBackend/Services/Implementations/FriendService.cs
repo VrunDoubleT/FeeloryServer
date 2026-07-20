@@ -84,6 +84,10 @@ public class FriendService : IFriendService
         if (request.Status != FriendRequestConstants.Pending)
             return Result.Fail("This friend request has already been processed");
 
+        bool alreadyFriends = await _db.Friends.AreFriendsAsync(request.SenderId, request.ReceiverId);
+        if (alreadyFriends)
+            return Result.Fail("They are already friends");
+        
         request.Status = FriendRequestConstants.Accepted;
 
         // Create a Friend relationship using canonical ordering via the factory method

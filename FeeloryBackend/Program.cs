@@ -79,9 +79,10 @@ using (var scope = app.Services.CreateScope())
     db.Database.Migrate();
 }
 
-
 // Global exception middleware
 app.UseGlobalException();
+
+app.UseCors("AllowAll");
 
 // Enable authentication/authorization
 app.UseAuthentication();

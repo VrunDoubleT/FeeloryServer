@@ -24,7 +24,7 @@ public static class FriendQueryExtensions
             .GetFriendIdsOfUser(userId)
             .ToListAsync(cancellationToken);
     }
-    
+
     // Get all friend relationships of a specific user
     // This method returns IQueryable<Friend> so EF Core can translate it to SQL
     public static IQueryable<Friend> GetFriendsOfUser(
@@ -50,13 +50,10 @@ public static class FriendQueryExtensions
     public static IQueryable<Friend> BetweenUsers(
         this IQueryable<Friend> query, Guid userA, Guid userB)
     {
-        var (small, large) = userA.CompareTo(userB) < 0
-            ? (userA, userB)
-            : (userB, userA);
-
-        return query
-            .AsNoTracking()
-            .Where(f => f.UserId == small && f.FriendId == large);
+        return query.AsNoTracking()
+            .Where(f =>
+                (f.UserId == userA && f.FriendId == userB) ||
+                (f.UserId == userB && f.FriendId == userA));
     }
 
     // Async version: get friendship record (FirstOrDefaultAsync)
@@ -84,6 +81,7 @@ public static class FriendQueryExtensions
         return query.BetweenUsers(userA, userB)
             .AnyAsync(cancellationToken);
     }
+
     public static IQueryable<Guid> GetFriendUserIds(
         this IQueryable<Friend> query,
         Guid currentUserId)
