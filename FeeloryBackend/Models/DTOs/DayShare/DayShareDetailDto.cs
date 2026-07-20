@@ -8,5 +8,7 @@ public class DayShareDetailDto
     public string Privacy { get; set; } = string.Empty;
     public List<DaySharePostItemDto> Posts { get; set; } = new();
     public DayShareOwnerDto Owner { get; set; } = null!;
+    
+    public List<Guid> AllowedUserIds { get; set; } = new();
     public DateTime CreatedAt { get; set; }
 }

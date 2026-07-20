@@ -296,6 +296,17 @@ public class DayShareService : IDayShareService
                 Reactions = post.Reactions
             });
         }
+        
+        var allowedUserIds = new List<Guid>();
+
+        if (dayShare.ShareType == DayShareTypeConstants.Custom)
+        {
+            allowedUserIds = await _db.DayShareFeeds
+                .Where(x => x.DayShareId == dayShareId &&
+                            x.ViewerId != dayShare.OwnerId)
+                .Select(x => x.ViewerId)
+                .ToListAsync();
+        }
 
         // 5. Return result
         return Result<DayShareDetailDto>.Ok(new DayShareDetailDto
@@ -306,7 +317,8 @@ public class DayShareService : IDayShareService
             Privacy = dayShare.ShareType,
             Owner = dayShare.Owner,
             Posts = postItems,
-            CreatedAt = dayShare.SharedDate
+            CreatedAt = dayShare.SharedDate,
+            AllowedUserIds = allowedUserIds
         });
     }
 
@@ -409,6 +421,25 @@ public class DayShareService : IDayShareService
         return Result<CursorPaginationResponse<DayShareFeedItemDto>>.Ok(response);
     }
 
+    public async Task<Result<DayShareDto?>> GetTodayAsync(Guid userId)
+    {
+        var today = DateTime.UtcNow.Date;
+
+        var dayShare = await _db.DayShares
+            .AsNoTracking()
+            .FirstOrDefaultAsync(x =>
+                x.OwnerId == userId &&
+                x.DeletedAt == null &&
+                x.SharedDate.Date == today);
+
+        if (dayShare == null)
+        {
+            return Result<DayShareDto?>.Ok(null);
+        }
+
+        return Result<DayShareDto?>.Ok(ToDto(dayShare));
+    }
+    
     // -----------------------------------
     // Private helper
     // -----------------------------------
@@ -612,6 +643,8 @@ public class DayShareService : IDayShareService
             }
         }
     }
+    
+    
 
     private async Task<CursorPaginationResponse<DayShareFeedItemDto>> BuildFeedResponseAsync(
         IQueryable<DayShareFeedProjection> query,

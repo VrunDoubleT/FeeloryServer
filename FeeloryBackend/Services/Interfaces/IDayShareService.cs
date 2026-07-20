@@ -22,6 +22,8 @@ public interface IDayShareService
     Task<Result> DeleteAsync(
         Guid currentUserId,
         Guid dayShareId);
+    
+    Task<Result<DayShareDto?>> GetTodayAsync(Guid userId);
 
     Task<Result<CursorPaginationResponse<DayShareFeedItemDto>>> GetFeedAsync(
         Guid currentUserId,

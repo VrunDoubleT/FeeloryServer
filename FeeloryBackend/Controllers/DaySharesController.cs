@@ -95,4 +95,16 @@ public class DaySharesController : ControllerBase
             ? Ok(result.Data)
             : BadRequest(new ApiErrorResponse(result.Error!));
     }
+    
+    [HttpGet("today")]
+    public async Task<IActionResult> GetToday()
+    {
+        var result = await _dayShareService.GetTodayAsync(CurrentUserId);
+
+        return result.IsSuccess
+            ? Ok(new ApiResponse<DayShareDto?>(
+                result.Data,
+                "Success"))
+            : BadRequest(new ApiErrorResponse(result.Error!));
+    }
 }
