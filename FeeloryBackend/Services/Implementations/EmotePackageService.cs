@@ -71,18 +71,25 @@ public class EmotePackageService : IEmotePackageService
 
     public async Task<Result<List<EmotePackageDto>>> GetUserPackagesAsync(Guid userId)
     {
-        var unlockedPackages = await _db.UserPackages
+        var packages = await _db.EmotePackages
             .AsNoTracking()
-            .Where(up => up.UserId == userId)
-            .Select(up => new EmotePackageDto
+            .Where(p => p.IsDefault || p.UserPackages.Any(up => up.UserId == userId))
+            .Select(p => new EmotePackageDto
             {
-                Id = up.Package.Id,
-                Name = up.Package.Name,
-                Description = up.Package.Description,
-                CoverUrl = up.Package.CoverUrl,
-                IsDefault = up.Package.IsDefault
-            }).ToListAsync();
+                Id = p.Id,
+                Name = p.Name,
+                Description = p.Description,
+                CoverUrl = p.CoverUrl,
+                IsDefault = p.IsDefault,
+                Items = p.Items.Select(i => new EmoteDto
+                {
+                    Id = i.Emote.Id,
+                    Name = i.Emote.Name,
+                    ImageUrl = i.Emote.ImageUrl
+                }).ToList()
+            })
+            .ToListAsync();
 
-        return Result<List<EmotePackageDto>>.Ok(unlockedPackages);
+        return Result<List<EmotePackageDto>>.Ok(packages);
     }
 }
